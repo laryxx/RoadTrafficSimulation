@@ -1,6 +1,6 @@
 import java.util.*;
 
-//Code from internet
+//Borrowed part code
 public class Graph {
 
     List<List<Integer>> adjacency_list = new ArrayList<>();

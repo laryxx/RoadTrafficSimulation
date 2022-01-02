@@ -10,10 +10,8 @@ public class GenerationRulesGUI {
     ArrayList<DefaultNode> SelectableGenerationNodes;
     public JFrame mainFrame;
     public JLabel label3;
-    //public JList<String> source_list;
     public JComboBox<String> source_list;
     public JLabel label4;
-    //public JList<String> destination_list;
     public JComboBox<String> destination_list;
     public JPanel panel1;
     public JLabel label_trucks;

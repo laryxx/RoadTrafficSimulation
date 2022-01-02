@@ -1,16 +1,4 @@
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.databind.util.JSONPObject;
-import org.locationtech.spatial4j.context.SpatialContext;
-import org.locationtech.spatial4j.distance.DistanceUtils;
 import org.locationtech.spatial4j.shape.Point;
-import org.locationtech.spatial4j.shape.impl.PointImpl;
-import org.locationtech.spatial4j.*;
-
-import java.io.BufferedWriter;
-import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
@@ -200,8 +188,6 @@ public class Generator {
 
 
     public static void TrueGenerateCar(GenerationRule rule) throws Exception {
-        //TODO
-        //1) get path
         System.out.println("Car gen func called");
         ArrayList<DefaultNode> path = new ArrayList<>();
         Stack<Integer> stack_path = new Stack<Integer>();
@@ -210,7 +196,7 @@ public class Generator {
         System.out.println("SIZE____" + stack_path.size());
         ArrayList<DefaultNode> real_path = new ArrayList<DefaultNode>();
         real_path = getRealPathFromGraphPath(stack_path);
-        String type = DecideOnCarType();
+        String type = DecideOnCarType(rule);
         switch (type) {
             case "Truck" -> {
                 Random rand = new Random();
@@ -223,7 +209,7 @@ public class Generator {
                             real_path.get(0).longitude, real_path.get(1).latitude, real_path.get(1).longitude),
                             0, 60,
                             Objects.requireNonNull(GetNodeGroupById(rule.source_node.group_id)).Nodes.size() - 1,
-                            0, 4.0, rule.source_node.latitude, rule.source_node.longitude,
+                            0, 3.0, rule.source_node.latitude, rule.source_node.longitude,
                             0);
                     Cars.add(truck);
                     JSONObject new_car = new JSONObject();
@@ -236,12 +222,53 @@ public class Generator {
                 }
             }
             case "Van" -> {
-                //TODO
-                System.out.println("TODO-Van");
+                Random rand = new Random();
+                int id = rand.nextInt(1000);
+                if (IsIdUnique(id)) {
+                    Van van = new Van(id, rule.source_node.id, rule.destination_node.id, real_path, Intent.ACCELERATE,
+                            0, CalculateDistanceInKilometers(real_path.get(0).latitude, real_path.get(0).longitude,
+                            real_path.get(real_path.size() - 1).latitude, real_path.get(real_path.size() - 1).longitude),
+                            rule.source_node.id, 0, 2500, CalculateDistanceInKilometers(real_path.get(0).latitude,
+                            real_path.get(0).longitude, real_path.get(1).latitude, real_path.get(1).longitude),
+                            0, 65,
+                            Objects.requireNonNull(GetNodeGroupById(rule.source_node.group_id)).Nodes.size() - 1,
+                            0, 4.0, rule.source_node.latitude, rule.source_node.longitude,
+                            0);
+                    Cars.add(van);
+                    JSONObject new_car = new JSONObject();
+                    new_car.put("id", van.id);
+                    new_car.put("name", "van");
+                    cars.add(new_car);
+                    System.out.println("Generated new car");
+                } else {
+                    TrueGenerateCar(rule);
+                }
             }
             case "Sedan" -> {
-                //TODO
-                System.out.println("TODO-Sedan");
+                Random rand = new Random();
+                int id = rand.nextInt(1000);
+                if (IsIdUnique(id)) {
+                    Sedan sedan = new Sedan(id, rule.source_node.id, rule.destination_node.id, real_path, Intent.ACCELERATE,
+                            0, CalculateDistanceInKilometers(real_path.get(0).latitude, real_path.get(0).longitude,
+                            real_path.get(real_path.size() - 1).latitude, real_path.get(real_path.size() - 1).longitude),
+                            rule.source_node.id, 0, 2500, CalculateDistanceInKilometers(real_path.get(0).latitude,
+                            real_path.get(0).longitude, real_path.get(1).latitude, real_path.get(1).longitude),
+                            0, 70,
+                            Objects.requireNonNull(GetNodeGroupById(rule.source_node.group_id)).Nodes.size() - 1,
+                            0, 4.5, rule.source_node.latitude, rule.source_node.longitude,
+                            0);
+                    Cars.add(sedan);
+                    JSONObject new_car = new JSONObject();
+                    new_car.put("id", sedan.id);
+                    new_car.put("name", "sedan");
+                    cars.add(new_car);
+                    System.out.println("Generated new car");
+                } else {
+                    TrueGenerateCar(rule);
+                }
+            }
+            case "Error" -> {
+                System.out.println("Error generating");
             }
         }
     }
@@ -255,22 +282,23 @@ public class Generator {
         return null;
     }
 
-    public static String DecideOnCarType(){
-        //TODO
+    public static String DecideOnCarType(GenerationRule rule){
+        double Sum = rule.sedans + rule.vans + rule.trucks;
+        double sedans_chance = (100*rule.sedans)/Sum;
+        double vans_chance = (100*rule.vans)/Sum;
+        double trucks_chance = (100*rule.trucks)/Sum;
         Random rand = new Random();
-        int number = rand.nextInt(3) + 1;
-        if(number == 1){
-            return "Truck";
-        }
-        else if(number == 2){
-            return "Van";
-        }
-        else if(number == 3){
+        int num = rand.nextInt(100)+1;
+        if(num < sedans_chance){
             return "Sedan";
         }
-        else{
-            return DecideOnCarType();
+        else if(sedans_chance < num && num < vans_chance){
+            return "Van";
         }
+        else if(num > vans_chance){
+            return "Truck";
+        }
+        return "Error";
     }
 
     //Borrowed part code
