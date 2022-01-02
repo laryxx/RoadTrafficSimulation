@@ -1,9 +1,18 @@
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import javax.swing.*;
 import javax.swing.border.Border;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class GenerationRulesGUI {
 
@@ -197,6 +206,7 @@ public class GenerationRulesGUI {
 
     public void showEvent(){
         JButton button1 = new JButton("                         View on the map                         ");
+        button1.addActionListener(new GenerationRulesGUI.ButtonClickListener());
         button1.setBorder(new RoundedBorder(5));
         //panel1.add(button1);
 
@@ -262,6 +272,46 @@ public class GenerationRulesGUI {
                 mainFrame.setVisible(false);
                 StartGUI start = new StartGUI(rules);
                 start.showEvent();
+            }
+            else if(command.equals("                         View on the map                         ")){
+                String source_select = (String) source_list.getSelectedItem();
+                assert source_select != null;
+                source_select = source_select.substring(5);
+                int resultSourceId = Integer.parseInt(source_select);
+                String destination_select = (String) destination_list.getSelectedItem();
+                assert destination_select != null;
+                destination_select = destination_select.substring(5);
+                int resultDestinationId = Integer.parseInt(destination_select);
+                var values = new HashMap<String, Integer>() {{
+                    put("source", resultSourceId);
+                    put ("destination", resultDestinationId);
+                }};
+                var objectMapper = new ObjectMapper();
+                String requestBody = "";
+                try {
+                    requestBody = objectMapper
+                            .writeValueAsString(values);
+                } catch (JsonProcessingException jsonProcessingException) {
+                    jsonProcessingException.printStackTrace();
+                }
+                HttpClient client = HttpClient.newHttpClient();
+                assert requestBody != null;
+                //Change to localhost
+                HttpRequest request = HttpRequest.newBuilder()
+                        .uri(URI.create("https://httpbin.org/post"))
+                        .POST(HttpRequest.BodyPublishers.ofString(requestBody))
+                        .build();
+
+                HttpResponse<String> response = null;
+                try {
+                    response = client.send(request,
+                            HttpResponse.BodyHandlers.ofString());
+                } catch (IOException | InterruptedException ioException) {
+                    ioException.printStackTrace();
+                }
+
+                assert response != null;
+                System.out.println(response.body());
             }
             else if(command.equals(" View Rules ")) {
                 ViewRulesGUI view = new ViewRulesGUI(rules);

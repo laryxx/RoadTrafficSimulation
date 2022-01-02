@@ -1,9 +1,16 @@
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import javax.swing.*;
 import javax.swing.border.Border;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
+import java.net.URI;
+import java.net.http.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class ViewRulesGUI {
     public JFrame mainFrame;
@@ -79,6 +86,7 @@ public class ViewRulesGUI {
     public void showEvent(){
         JButton button1 = new JButton("            View on the map            ");
         button1.setBorder(new GenerationRulesGUI.RoundedBorder(5));
+        button1.addActionListener(new ViewRulesGUI.ButtonClickListener());
         panel.add(button1);
 
         JButton remove_button = new JButton("            Remove            ");
@@ -98,6 +106,39 @@ public class ViewRulesGUI {
                     view.showEvent();
                     mainFrame.setVisible(false);
                 }
+            }
+            else if(command.equals("            View on the map            ")){
+                var values = new HashMap<String, Integer>() {{
+                    GenerationRule selected_rule = GenerationRulesGUI.rules.get(rules_view.getSelectedIndex());
+                    put("source", selected_rule.source_node.id);
+                    put ("destination", selected_rule.destination_node.id);
+                }};
+                var objectMapper = new ObjectMapper();
+                String requestBody = "";
+                try {
+                    requestBody = objectMapper
+                            .writeValueAsString(values);
+                } catch (JsonProcessingException jsonProcessingException) {
+                    jsonProcessingException.printStackTrace();
+                }
+                HttpClient client = HttpClient.newHttpClient();
+                assert requestBody != null;
+                //Change to localhost
+                HttpRequest request = HttpRequest.newBuilder()
+                        .uri(URI.create("https://httpbin.org/post"))
+                        .POST(HttpRequest.BodyPublishers.ofString(requestBody))
+                        .build();
+
+                HttpResponse<String> response = null;
+                try {
+                    response = client.send(request,
+                            HttpResponse.BodyHandlers.ofString());
+                } catch (IOException | InterruptedException ioException) {
+                    ioException.printStackTrace();
+                }
+
+                assert response != null;
+                System.out.println(response.body());
             }
 
         }
