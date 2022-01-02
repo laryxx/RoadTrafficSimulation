@@ -107,7 +107,7 @@ public class Generator {
 //
 //        GenerateCar(real_path);
 
-        StartTimer(100);
+        StartTimer(10, 0);
 
     }
 
@@ -395,7 +395,7 @@ public class Generator {
         return CalculateRandomPath(graph, total_number_of_edges, total_number_of_nodes, source_graph_id, GetRandomPointGraphID(total_number_of_nodes));
     }
 
-    public static void StartTimer(int seconds) throws Exception {
+    public static void StartTimer(int seconds, int frame) throws Exception {
         //TODO
         //Assuming that for every iteration 1/10th of a second passes in a simulation
         for(int i = 0; i <seconds; i++){
@@ -403,7 +403,8 @@ public class Generator {
                 SaveJSON();
                 return;
             }
-            CalculateAllPositions(Cars, i);
+            frame++;
+            CalculateAllPositions(Cars, i, frame);
             DefineGeneration(i);
         }
     }
@@ -422,7 +423,7 @@ public class Generator {
         throw new Exception("Error finding the next node");
     }
 
-    public static void CalculateAllPositions(ArrayList<Vehicle> Cars, int second) throws Exception {
+    public static void CalculateAllPositions(ArrayList<Vehicle> Cars, int second, int frame) throws Exception {
         for(int i = 0; i < Cars.size(); i++){
             //TODO
             Vehicle car = Cars.get(i);
@@ -442,7 +443,6 @@ public class Generator {
                     System.out.println("CAR REMOVED ON " + second/10 + "'s SECOND");
                     Cars.remove(car);
                     //SaveJSON();
-                    return;
                 }
 
                 //1.1,5 Updating the sum of node distances for future use
@@ -519,7 +519,6 @@ public class Generator {
 
             //HERE
             //WriteToJSON(car, second);
-            createPositionReport(second);
 
             System.out.println("CAR LAT: " + pair3.latitude + " CAR LONG: " + pair3.longitude);
             //The last node parameter should be checked and the distance in km from the last visited node calculated.
@@ -530,6 +529,7 @@ public class Generator {
             System.out.println("Total Distance travelled: " + car.progress_in_km + " km\n");
             System.out.println("Sum of node distances: " + car.sum_of_node_distances);
         }
+        createPositionReport(second, frame);
     }
 
     public static DefaultNode getNodeFromID(int id) throws Exception {
@@ -667,11 +667,11 @@ public class Generator {
         frames.add(frame);
     }
 
-    public static void createPositionReport(int second){
+    public static void createPositionReport(int second, int frame_number){
         JSONArray positions = new JSONArray();
         for(int i = 0; i < Cars.size(); i++){
             JSONObject frameDetails = new JSONObject();
-            frameDetails.put("car", Cars.get(i).id);
+            frameDetails.put("id", Cars.get(i).id);
             frameDetails.put("lat", Cars.get(i).latitude);
             frameDetails.put("lon", Cars.get(i).longitude);
             frameDetails.put("angle", Cars.get(i).angle);
@@ -680,7 +680,7 @@ public class Generator {
         JSONObject object = new JSONObject();
         object.put("positions", positions);
         JSONObject frame = new JSONObject();
-        frame.put("frame", second);
+        frame.put("frame", frame_number);
         frame.put("positions", positions);
         frames.add(frame);
     }
@@ -693,9 +693,20 @@ public class Generator {
 
         JSONObject total = new JSONObject();
         total.put("framerate", 10);
-        total.put("types", cars);
+        JSONArray types = new JSONArray();
+        JSONObject type1 = new JSONObject();
+        type1.put("name", "truck");
+        JSONObject type2 = new JSONObject();
+        type2.put("name", "Sedan");
+        JSONObject type3 = new JSONObject();
+        type3.put("name", "Van");
+        types.add(type1);
+        types.add(type2);
+        types.add(type3);
+        total.put("types", types);
+        //total.put("types", cars);
         total.put("frames", frames);
-        try (FileWriter file = new FileWriter("frames1.json")) {
+        try (FileWriter file = new FileWriter("frames.json")) {
             //We can write any JSONArray or JSONObject instance to the file
             System.out.println("Write");
             file.write(total.toJSONString());
