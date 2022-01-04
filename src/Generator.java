@@ -1,4 +1,9 @@
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 import org.locationtech.spatial4j.shape.Point;
+
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
@@ -581,10 +586,30 @@ public class Generator {
 //        //https://www.igismap.com/formula-to-find-bearing-or-heading-angle-between-two-points-latitude-longitude/
 //    }
 
-    public static void CreateNodes(){
+    public static void CreateNodes() throws IOException, ParseException {
         //Every single node where a dynamic object may appear(A highway, a road, e.t.c.)
         //And its relation is to be organised in the node structure(Node and NodeGroup objects
         //which shall all exist in memory while the code is running)
+        Object obj = new JSONParser().parse(new FileReader("map.geojson"));
+        JSONObject map = (JSONObject) obj;
+
+        JSONArray features = (JSONArray) map.get("features");
+        for(int i = 0; i < features.size(); i++){
+            Object current = new Object();
+            current = features.get(i);
+            JSONObject properties = new JSONObject();
+            properties = (JSONObject) ((JSONObject) current).get("properties");
+            String str = (String) properties.get("highway");
+            if(str != null) {
+                System.out.println(str);
+                //Object geometry = ((JSONObject) current).get("geometry");
+                JSONObject geometry = (JSONObject) ((JSONObject) current).get("geometry");
+                JSONArray coordinates = (JSONArray) geometry.get("coordinates");
+                for(int j = 0; j < coordinates.size(); j++){
+                    System.out.println(coordinates.get(j));
+                }
+            }
+        }
     }
 
     //borrowed method
@@ -687,10 +712,6 @@ public class Generator {
     
 
     public static void SaveJSON(){
-
-//        JSONObject type2 = new JSONObject();
-//        type2.put("framerate", 10);
-
         JSONObject total = new JSONObject();
         total.put("framerate", 10);
         JSONArray types = new JSONArray();
@@ -704,7 +725,6 @@ public class Generator {
         types.add(type2);
         types.add(type3);
         total.put("types", types);
-        //total.put("types", cars);
         total.put("frames", frames);
         try (FileWriter file = new FileWriter("frames.json")) {
             //We can write any JSONArray or JSONObject instance to the file
