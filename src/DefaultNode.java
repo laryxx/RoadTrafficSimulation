@@ -5,7 +5,7 @@ public abstract class DefaultNode {
     double latitude;
     double longitude;
     int connection_id;
-    int group_id;
+    String group_id;
     ArrayList<OuterConnection> outer_connections;
     int graph_id;
 
@@ -14,7 +14,7 @@ public abstract class DefaultNode {
     }
 
     //OuterNode
-    public DefaultNode(int id, double latitude, double longitude, int group_id, ArrayList<OuterConnection> outer_connections, int graph_id) {
+    public DefaultNode(int id, double latitude, double longitude, String group_id, ArrayList<OuterConnection> outer_connections, int graph_id) {
         this.id = id;
         this.latitude = latitude;
         this.longitude = longitude;
@@ -24,7 +24,7 @@ public abstract class DefaultNode {
     }
 
     //EndNode
-    public DefaultNode(int id, double latitude, double longitude, int group_id, int graph_id) {
+    public DefaultNode(int id, double latitude, double longitude, String group_id, int graph_id) {
         this.id = id;
         this.latitude = latitude;
         this.longitude = longitude;
@@ -33,7 +33,7 @@ public abstract class DefaultNode {
     }
 
     //InnerNode
-    public DefaultNode(int id, double latitude, double longitude, int connection_id, int group_id, int graph_id) {
+    public DefaultNode(int id, double latitude, double longitude, int connection_id, String group_id, int graph_id) {
         this.id = id;
         this.latitude = latitude;
         this.longitude = longitude;
@@ -83,11 +83,11 @@ public abstract class DefaultNode {
         return connection_id;
     }
 
-    public void setGroup_id(int group_id){
+    public void setGroup_id(String group_id){
         this.group_id = group_id;
     }
 
-    public int getGroup_id(){
+    public String getGroup_id(){
         return group_id;
     }
 

@@ -39,17 +39,17 @@ public class Generator {
         double distance4 = CalculateDistanceInKilometers(la4, lo4, la5, lo5);
         double Sum = distance1 + distance2 + distance3 + distance4;
         ArrayList<DefaultNode> nodeGroup1List = new ArrayList<DefaultNode>(5);
-        InnerNode node1 = new InnerNode(1, la1, lo1, 2, 1, 0);
-        InnerNode node2 = new InnerNode(2, la2, lo2, 3, 1, 1);
-        InnerNode node3 = new InnerNode(3, la3, lo3, 4, 1, 2);
-        InnerNode node4 = new InnerNode(4, la4, lo4, 5, 1, 3);
-        EndNode node5 = new EndNode(5, la5, lo5, 1, 4);
+        InnerNode node1 = new InnerNode(1, la1, lo1, 2, "1", 0);
+        InnerNode node2 = new InnerNode(2, la2, lo2, 3, "1", 1);
+        InnerNode node3 = new InnerNode(3, la3, lo3, 4, "1", 2);
+        InnerNode node4 = new InnerNode(4, la4, lo4, 5, "1", 3);
+        EndNode node5 = new EndNode(5, la5, lo5, "1", 4);
         nodeGroup1List.add(node1);
         nodeGroup1List.add(node2);
         nodeGroup1List.add(node3);
         nodeGroup1List.add(node4);
         nodeGroup1List.add(node5);
-        NodeGroup nodeGroup1 = new NodeGroup(1, "highway", nodeGroup1List, 60);
+        NodeGroup nodeGroup1 = new NodeGroup("1", "highway", nodeGroup1List, 60);
         nodeGroup1.setFitting_speed(nodeGroup1.fitting_speed - CalculateSpeedPenaltyByAngle(
                 nodeGroup1.getNodes().get(0).latitude, nodeGroup1.getNodes().get(0).longitude,
                 nodeGroup1.getNodes().get(nodeGroup1.getNodes().size()-1).latitude,
@@ -297,9 +297,9 @@ public class Generator {
         }
     }
 
-    public static NodeGroup GetNodeGroupById(int id){
+    public static NodeGroup GetNodeGroupById(String id){
         for (int i = 0; i < NodeGroups.size(); i++){
-            if (NodeGroups.get(i).id == id) {
+            if (NodeGroups.get(i).id.equals(id)) {
                 return NodeGroups.get(i);
             }
         }
@@ -578,11 +578,11 @@ public class Generator {
        }
     }
 
-    public static Pair GetFittingSpeedAndNodeCountByNodeGroupId(int node_group_id) throws Exception {
+    public static Pair GetFittingSpeedAndNodeCountByNodeGroupId(String node_group_id) throws Exception {
         //For now, the complexity here would also be O(n),
         //but this implementation is subject for a change
         for(int i = 0; i < NodeGroups.size()-1; i++){
-            if (NodeGroups.get(i).id == node_group_id){
+            if (NodeGroups.get(i).id.equals(node_group_id)) {
                 return new Pair(NodeGroups.get(i).fitting_speed, NodeGroups.get(i).Nodes.size()-1);
             }
         }
@@ -623,42 +623,48 @@ public class Generator {
             Random rand = new Random();
             if (str != null) {
                 String group_id = (String) curr.get("id");
-                group_id = group_id.substring(4);
-                int groupId = Integer.parseInt(group_id);
-                System.out.println("GROUP ID: " + groupId);
+                //group_id = group_id.substring(4);
+                group_id = group_id.replaceAll("[^1-9]", "");
+                //int groupId = Integer.parseInt(group_id);
+                System.out.println("GROUP ID: " + group_id);
                 System.out.println(str);
                 ArrayList<DefaultNode> group_nodes = new ArrayList<>();
-                NodeGroup group = new NodeGroup(groupId, str, group_nodes, 60);
+                NodeGroup group = new NodeGroup(group_id, str, group_nodes, 60);
                 //Object geometry = ((JSONObject) current).get("geometry");
                 JSONObject geometry = (JSONObject) ((JSONObject) current).get("geometry");
                 JSONArray coordinates = (JSONArray) geometry.get("coordinates");
                 for (int j = 0; j < coordinates.size(); j++) {
 
                     System.out.println(coordinates.get(j));
-                    JSONArray lat_and_long = (JSONArray) coordinates.get(j);
-                    System.out.println("lat: " + lat_and_long.get(0));
-                    //The first and last nodes are outer nodes
-                    //CONNECTIONS AND GRAPH IDS are at first unpopulated
-                    if (j == 0 || j == coordinates.size() - 1) {
-                        int id = rand.nextInt(50000) + 1;
-                        if(IsNodeIdUnique(id)){
-                            OuterNode node = new OuterNode(id, (double)lat_and_long.get(0), (double) lat_and_long.get(1), groupId, null, 0);
-                            node_ids.add(id);
-                            group_nodes.add(node);
+                    if (coordinates.get(j) instanceof JSONArray && !str.equals("stop")) {
+                        JSONArray lat_and_long = (JSONArray) coordinates.get(j);
+
+                        System.out.println("lat: " + lat_and_long.get(0));
+                        //The first and last nodes are outer nodes
+                        //CONNECTIONS AND GRAPH IDS are at first unpopulated
+                        if (j == 0 || j == coordinates.size() - 1) {
+                            int id = rand.nextInt(50000) + 1;
+                            if (IsNodeIdUnique(id)) {
+                                OuterNode node = new OuterNode(id, (double) lat_and_long.get(0), (double) lat_and_long.get(1), group_id, null, 0);
+                                node_ids.add(id);
+                                group_nodes.add(node);
+                            }
                         }
-                    }
-                    //Other nodes shall be inner nodes
-                    else {
-                        int id = rand.nextInt(50000) + 1;
-                        if(IsNodeIdUnique(id)) {
-                            InnerNode node = new InnerNode(id, (double) lat_and_long.get(0), (double) lat_and_long.get(1), 0, groupId, 0);
-                            node_ids.add(id);
-                            group_nodes.add(node);
+                        //Other nodes shall be inner nodes
+                        else {
+                            int id = rand.nextInt(50000) + 1;
+                            if (IsNodeIdUnique(id)) {
+                                InnerNode node = new InnerNode(id, (double) lat_and_long.get(0), (double) lat_and_long.get(1), 0, group_id, 0);
+                                node_ids.add(id);
+                                group_nodes.add(node);
+                            }
                         }
                     }
                 }
                 group.setNodes(group_nodes);
-                NodeGroups.add(group);
+                if(!str.equals("stop")) {
+                    NodeGroups.add(group);
+                }
                 System.out.println("Node count: ______ " + group_nodes.size());
             }
         }

@@ -1,23 +1,23 @@
 import java.util.ArrayList;
 
 public class NodeGroup {
-    int id;
+    String id;
     String type;
     ArrayList<DefaultNode> Nodes;
     double fitting_speed;
 
-    public NodeGroup(int id, String type, ArrayList<DefaultNode> Nodes, double fitting_speed){
+    public NodeGroup(String id, String type, ArrayList<DefaultNode> Nodes, double fitting_speed){
         this.id = id;
         this.type = type;
         this.Nodes = Nodes;
         this.fitting_speed = fitting_speed;
     }
 
-    public void setId(int id){
+    public void setId(String id){
         this.id = id;
     }
 
-    public int getId(){
+    public String getId(){
         return id;
     }
 
