@@ -20,6 +20,7 @@ public class Generator {
     public static JSONArray cars = new JSONArray();
     public static Graph graph = new Graph();
     public static HashSet<Integer> vehicle_ids = new HashSet<Integer>();
+    public static HashSet<Integer> node_ids = new HashSet<>();
 
     public static void main(String[] args) throws Exception {
         double la1 = 14.3811433;
@@ -48,7 +49,7 @@ public class Generator {
         nodeGroup1List.add(node3);
         nodeGroup1List.add(node4);
         nodeGroup1List.add(node5);
-        NodeGroup nodeGroup1 = new NodeGroup(1, RelationType.Highway, nodeGroup1List, 60);
+        NodeGroup nodeGroup1 = new NodeGroup(1, "highway", nodeGroup1List, 60);
         nodeGroup1.setFitting_speed(nodeGroup1.fitting_speed - CalculateSpeedPenaltyByAngle(
                 nodeGroup1.getNodes().get(0).latitude, nodeGroup1.getNodes().get(0).longitude,
                 nodeGroup1.getNodes().get(nodeGroup1.getNodes().size()-1).latitude,
@@ -112,8 +113,20 @@ public class Generator {
 //
 //        GenerateCar(real_path);
 
+        CreateNodes();
+        printAllNodeGroups();
         StartTimer(10, 0);
 
+    }
+
+    public static void printAllNodeGroups(){
+        System.out.println("TOTAL " + NodeGroups.size() + " NODEGROUPS");
+        for(int i = 0; i < NodeGroups.size(); i++){
+            NodeGroup group = NodeGroups.get(i);
+            System.out.println("NODE GROUP ID: " + group.id);
+            System.out.println("NUMBER OF NODES: " + group.Nodes.size());
+            System.out.println("NODE GROUP TYPE: " + group.type);
+        }
     }
 
     public static void saveRules(ArrayList<GenerationRule> rules1){
@@ -191,6 +204,12 @@ public class Generator {
         return true;
     }
 
+    public static boolean IsNodeIdUnique(int id){
+        if(node_ids.contains(id)){
+            return false;
+        }
+        return true;
+    }
 
     public static void TrueGenerateCar(GenerationRule rule) throws Exception {
         System.out.println("Car gen func called");
@@ -590,27 +609,61 @@ public class Generator {
         //Every single node where a dynamic object may appear(A highway, a road, e.t.c.)
         //And its relation is to be organised in the node structure(Node and NodeGroup objects
         //which shall all exist in memory while the code is running)
-        Object obj = new JSONParser().parse(new FileReader("map.geojson"));
+        Object obj = new JSONParser().parse(new FileReader("simple_map.geojson"));
         JSONObject map = (JSONObject) obj;
 
         JSONArray features = (JSONArray) map.get("features");
-        for(int i = 0; i < features.size(); i++){
+        for (int i = 0; i < features.size(); i++) {
             Object current = new Object();
             current = features.get(i);
+            JSONObject curr = (JSONObject) features.get(i);
             JSONObject properties = new JSONObject();
             properties = (JSONObject) ((JSONObject) current).get("properties");
             String str = (String) properties.get("highway");
-            if(str != null) {
+            Random rand = new Random();
+            if (str != null) {
+                String group_id = (String) curr.get("id");
+                group_id = group_id.substring(4);
+                int groupId = Integer.parseInt(group_id);
+                System.out.println("GROUP ID: " + groupId);
                 System.out.println(str);
+                ArrayList<DefaultNode> group_nodes = new ArrayList<>();
+                NodeGroup group = new NodeGroup(groupId, str, group_nodes, 60);
                 //Object geometry = ((JSONObject) current).get("geometry");
                 JSONObject geometry = (JSONObject) ((JSONObject) current).get("geometry");
                 JSONArray coordinates = (JSONArray) geometry.get("coordinates");
-                for(int j = 0; j < coordinates.size(); j++){
+                for (int j = 0; j < coordinates.size(); j++) {
+
                     System.out.println(coordinates.get(j));
+                    JSONArray lat_and_long = (JSONArray) coordinates.get(j);
+                    System.out.println("lat: " + lat_and_long.get(0));
+                    //The first and last nodes are outer nodes
+                    //CONNECTIONS AND GRAPH IDS are at first unpopulated
+                    if (j == 0 || j == coordinates.size() - 1) {
+                        int id = rand.nextInt(50000) + 1;
+                        if(IsNodeIdUnique(id)){
+                            OuterNode node = new OuterNode(id, (double)lat_and_long.get(0), (double) lat_and_long.get(1), groupId, null, 0);
+                            node_ids.add(id);
+                            group_nodes.add(node);
+                        }
+                    }
+                    //Other nodes shall be inner nodes
+                    else {
+                        int id = rand.nextInt(50000) + 1;
+                        if(IsNodeIdUnique(id)) {
+                            InnerNode node = new InnerNode(id, (double) lat_and_long.get(0), (double) lat_and_long.get(1), 0, groupId, 0);
+                            node_ids.add(id);
+                            group_nodes.add(node);
+                        }
+                    }
                 }
+                group.setNodes(group_nodes);
+                NodeGroups.add(group);
+                System.out.println("Node count: ______ " + group_nodes.size());
             }
         }
     }
+
 
     //borrowed method
     protected static double bearing(double lat1, double lon1, double lat2, double lon2){

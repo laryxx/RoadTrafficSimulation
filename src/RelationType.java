@@ -1,3 +1,3 @@
 public enum RelationType {
-    Highway, Public_Road
+    highway, motorway, trunk, primary, secondary, tertiary,
 }

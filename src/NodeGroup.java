@@ -2,11 +2,11 @@ import java.util.ArrayList;
 
 public class NodeGroup {
     int id;
-    RelationType type;
+    String type;
     ArrayList<DefaultNode> Nodes;
     double fitting_speed;
 
-    public NodeGroup(int id, RelationType type, ArrayList<DefaultNode> Nodes, double fitting_speed){
+    public NodeGroup(int id, String type, ArrayList<DefaultNode> Nodes, double fitting_speed){
         this.id = id;
         this.type = type;
         this.Nodes = Nodes;
@@ -21,11 +21,11 @@ public class NodeGroup {
         return id;
     }
 
-    public void setType(RelationType type){
+    public void setType(String type){
         this.type = type;
     }
 
-    public RelationType getType(){
+    public String getType(){
         return type;
     }
 
