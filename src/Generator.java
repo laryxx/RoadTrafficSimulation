@@ -115,7 +115,44 @@ public class Generator {
 
         CreateNodes();
         printAllNodeGroups();
-        StartTimer(10, 0);
+
+        //One-time thing
+//        double distance = CalculateDistanceInKilometers(1.2055676, 46.3978279, 1.2276719, 46.3961438);
+//        double distance2 = CalculateDistanceInKilometers(1.2055676, 46.3978279, 1.2285784, 46.4002829);
+//        double distance3 = CalculateDistanceInKilometers(1.2276719, 46.3961438, 1.2276719, 46.3961438);
+//        System.out.println("DISTANCE BETWEEN NODEGROUPS1: " + distance*1000);
+//        System.out.println("DISTANCE BETWEEN NODEGROUPS2: " + distance2*1000);
+//        System.out.println("DISTANCE BETWEEN NODEGROUPS3: " + distance3*1000);
+        double unclass_end_lat = NodeGroups.get(NodeGroups.size()-2).Nodes.get(NodeGroups.get(NodeGroups.size()-2).Nodes.size()-1).latitude;
+        double unclass_end_long = NodeGroups.get(NodeGroups.size()-2).Nodes.get(NodeGroups.get(NodeGroups.size()-2).Nodes.size()-1).longitude;
+
+        double track_start_lat = NodeGroups.get(NodeGroups.size()-1).Nodes.get(0).latitude;
+        double track_start_long = NodeGroups.get(NodeGroups.size()-1).Nodes.get(0).longitude;
+
+        double dist = CalculateDistanceInKilometers(unclass_end_lat, unclass_end_long, track_start_lat, track_start_long);
+        System.out.println("Distance: " + dist);
+        //StartTimer(10, 0);
+
+        //Manual creation of a graph + populating it with a specific nodegroup nodes.
+    }
+
+    public static void NavigateNodeGroup(NodeGroup group){
+        //TODO
+        for(int i = 0; i<group.Nodes.size(); i++){
+            if(i == group.Nodes.size()-1){
+                //Manual setting
+                ArrayList<OuterConnection> connections = new ArrayList<>();
+                OuterConnection connection = new OuterConnection(NodeGroups.get(NodeGroups.size()-1).id, NodeGroups.get(NodeGroups.size()-1).Nodes.get(0).id);
+                connections.add(connection);
+                group.Nodes.get(i).setOuter_connections(connections);
+            }
+            else {
+                group.Nodes.get(i).setConnection_id(group.Nodes.get(i + 1).id);
+            }
+        }
+    }
+
+    public static void PopulateGraph(){
 
     }
 
@@ -126,6 +163,21 @@ public class Generator {
             System.out.println("NODE GROUP ID: " + group.id);
             System.out.println("NUMBER OF NODES: " + group.Nodes.size());
             System.out.println("NODE GROUP TYPE: " + group.type);
+        }
+        printAllNodesInNodeGroup(NodeGroups.get(NodeGroups.size()-1));
+        printAllNodesInNodeGroup(NodeGroups.get(NodeGroups.size()-2));
+    }
+
+    public static void printAllNodesInNodeGroup(NodeGroup group){
+        for(int i = 0; i < group.Nodes.size(); i++){
+            System.out.println("Node " + i + "id: " + group.Nodes.get(i).id);
+            System.out.println("Type: " + group.Nodes.get(i).toString());
+            System.out.println("Latitude: " + group.Nodes.get(i).latitude + "Longitude: " + group.Nodes.get(i).longitude);
+            if(i < group.Nodes.size()-1) {
+                System.out.println("Next node id: " + group.Nodes.get(i).connection_id);
+                System.out.println("Distance to next: " + CalculateDistanceInKilometers(group.Nodes.get(i).latitude,
+                        group.Nodes.get(i).longitude, group.Nodes.get(i + 1).latitude, group.Nodes.get(i + 1).longitude) * 100 + "Meters");
+            }
         }
     }
 
@@ -642,7 +694,7 @@ public class Generator {
                         System.out.println("lat: " + lat_and_long.get(0));
                         //The first and last nodes are outer nodes
                         //CONNECTIONS AND GRAPH IDS are at first unpopulated
-                        if (j == 0 || j == coordinates.size() - 1) {
+                        if (j == coordinates.size() - 1) {
                             int id = rand.nextInt(50000) + 1;
                             if (IsNodeIdUnique(id)) {
                                 OuterNode node = new OuterNode(id, (double) lat_and_long.get(0), (double) lat_and_long.get(1), group_id, null, 0);
@@ -663,6 +715,7 @@ public class Generator {
                 }
                 group.setNodes(group_nodes);
                 if(!str.equals("stop")) {
+                    NavigateNodeGroup(group);
                     NodeGroups.add(group);
                 }
                 System.out.println("Node count: ______ " + group_nodes.size());
