@@ -21,6 +21,7 @@ public class Generator {
     public static Graph graph = new Graph();
     public static HashSet<Integer> vehicle_ids = new HashSet<Integer>();
     public static HashSet<Integer> node_ids = new HashSet<>();
+    public static HashSet<Integer> node_graph_ids = new HashSet<>();
 
     public static void main(String[] args) throws Exception {
         double la1 = 14.3811433;
@@ -142,7 +143,8 @@ public class Generator {
             if(i == group.Nodes.size()-1){
                 //Manual setting
                 ArrayList<OuterConnection> connections = new ArrayList<>();
-                OuterConnection connection = new OuterConnection(NodeGroups.get(NodeGroups.size()-1).id, NodeGroups.get(NodeGroups.size()-1).Nodes.get(0).id);
+                OuterConnection connection = new OuterConnection(NodeGroups.get(NodeGroups.size()-1).id,
+                        NodeGroups.get(NodeGroups.size()-1).Nodes.get(0).id);
                 connections.add(connection);
                 group.Nodes.get(i).setOuter_connections(connections);
             }
@@ -153,7 +155,21 @@ public class Generator {
     }
 
     public static void PopulateGraph(){
-
+        //TODO
+        ArrayList<Edge> edges2 = new ArrayList<>();
+        for(int i = 0; i < AllNodes.size(); i++){
+            if(AllNodes.get(i) instanceof OuterNode){
+                for(int j = 0; j < AllNodes.get(i).outer_connections.size(); j++){
+                    edges2.add(new Edge(AllNodes.get(i).graph_id,
+                            Objects.requireNonNull(GetNodeById(AllNodes.get(i).outer_connections.get(j).group_connection_node_id)).id,
+                            AllNodes.get(i).id, AllNodes.get(i).outer_connections.get(j).group_connection_node_id));
+                }
+            } else if(AllNodes.get(i) instanceof InnerNode){
+                edges2.add(new Edge(AllNodes.get(i).graph_id,
+                        Objects.requireNonNull(GetNodeById(AllNodes.get(i).connection_id)).graph_id,
+                        AllNodes.get(i).id, AllNodes.get(i).connection_id));
+            }
+        }
     }
 
     public static void printAllNodeGroups(){
@@ -263,6 +279,13 @@ public class Generator {
         return true;
     }
 
+    public static boolean IsGraphIdUnique(int id){
+        if(node_graph_ids.contains(id)){
+            return false;
+        }
+        return true;
+    }
+
     public static void TrueGenerateCar(GenerationRule rule) throws Exception {
         System.out.println("Car gen func called");
         ArrayList<DefaultNode> path = new ArrayList<>();
@@ -353,6 +376,15 @@ public class Generator {
         for (int i = 0; i < NodeGroups.size(); i++){
             if (NodeGroups.get(i).id.equals(id)) {
                 return NodeGroups.get(i);
+            }
+        }
+        return null;
+    }
+
+    public static DefaultNode GetNodeById(int id){
+        for(int i = 0; i < AllNodes.size(); i++){
+            if (AllNodes.get(i).id == id){
+                return AllNodes.get(i);
             }
         }
         return null;
@@ -696,19 +728,38 @@ public class Generator {
                         //CONNECTIONS AND GRAPH IDS are at first unpopulated
                         if (j == coordinates.size() - 1) {
                             int id = rand.nextInt(50000) + 1;
-                            if (IsNodeIdUnique(id)) {
-                                OuterNode node = new OuterNode(id, (double) lat_and_long.get(0), (double) lat_and_long.get(1), group_id, null, 0);
+                            int graph_id = rand.nextInt(50000) + 1;
+                            if (IsNodeIdUnique(id) && IsGraphIdUnique(graph_id)) {
+                                OuterNode node = new OuterNode(id, (double) lat_and_long.get(0),
+                                        (double) lat_and_long.get(1), group_id, null, graph_id);
                                 node_ids.add(id);
                                 group_nodes.add(node);
+                                //AllNodes.add(node);
+                            }
+                            else{
+                                OuterNode node = new OuterNode(rand.nextInt(50000) + 1,
+                                        (double) lat_and_long.get(0), (double) lat_and_long.get(1), group_id,
+                                        null, rand.nextInt(50000) + 1);
+                                node_ids.add(id);
+                                group_nodes.add(node);
+                                //AllNodes.add(node);
                             }
                         }
                         //Other nodes shall be inner nodes
                         else {
                             int id = rand.nextInt(50000) + 1;
+                            int graph_id = rand.nextInt(50000) + 1;
                             if (IsNodeIdUnique(id)) {
-                                InnerNode node = new InnerNode(id, (double) lat_and_long.get(0), (double) lat_and_long.get(1), 0, group_id, 0);
+                                InnerNode node = new InnerNode(id, (double) lat_and_long.get(0), (double) lat_and_long.get(1), 0, group_id, graph_id);
                                 node_ids.add(id);
                                 group_nodes.add(node);
+                                //AllNodes.add(node);
+                            }
+                            else{
+                                InnerNode node = new InnerNode(id, (double) lat_and_long.get(0), (double) lat_and_long.get(1), 0, group_id, graph_id);
+                                node_ids.add(id);
+                                group_nodes.add(node);
+                                //AllNodes.add(node);
                             }
                         }
                     }
@@ -717,6 +768,7 @@ public class Generator {
                 if(!str.equals("stop")) {
                     NavigateNodeGroup(group);
                     NodeGroups.add(group);
+                    AllNodes.addAll(group.Nodes);
                 }
                 System.out.println("Node count: ______ " + group_nodes.size());
             }
