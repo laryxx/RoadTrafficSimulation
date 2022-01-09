@@ -90,19 +90,21 @@ public class Generator {
 
     public static void Start(ArrayList<GenerationRule> input_rules) throws Exception {
 
-        rules = input_rules;
+//        rules = input_rules;
+//
+//        System.out.println("\n-------NEW RUN--------\n");
+//
+//        ArrayList<Edge> edges2 = new ArrayList<>();
+//
+//        edges2.add(new Edge(0,1,1,2));
+//        edges2.add(new Edge(1,2,2,3));
+//        edges2.add(new Edge(2,3,3,4));
+//        edges2.add(new Edge(3,4,4,5));
+//
+//        Graph graph2 = new Graph(edges2, 4);
+//        graph = graph2;
 
-        System.out.println("\n-------NEW RUN--------\n");
-
-        ArrayList<Edge> edges2 = new ArrayList<>();
-
-        edges2.add(new Edge(0,1,1,2));
-        edges2.add(new Edge(1,2,2,3));
-        edges2.add(new Edge(2,3,3,4));
-        edges2.add(new Edge(3,4,4,5));
-
-        Graph graph2 = new Graph(edges2, 4);
-        graph = graph2;
+//        ----------------
 
 //        Stack<Integer> path2 = CalculateRandomPath(graph2, 5, 5, 0,  4);
 //        System.out.println("The complete path is " + path2);
@@ -115,6 +117,7 @@ public class Generator {
 //        GenerateCar(real_path);
 
         CreateNodes();
+        PopulateGraph();
         printAllNodeGroups();
 
         //One-time thing
@@ -135,6 +138,7 @@ public class Generator {
         //StartTimer(10, 0);
 
         //Manual creation of a graph + populating it with a specific nodegroup nodes.
+//        Stack<Integer> path = CalculateRandomPathMod(graph, 50000, 50000, )
     }
 
     public static void NavigateNodeGroup(NodeGroup group){
@@ -161,7 +165,7 @@ public class Generator {
             if(AllNodes.get(i) instanceof OuterNode){
                 for(int j = 0; j < AllNodes.get(i).outer_connections.size(); j++){
                     edges2.add(new Edge(AllNodes.get(i).graph_id,
-                            Objects.requireNonNull(GetNodeById(AllNodes.get(i).outer_connections.get(j).group_connection_node_id)).id,
+                            Objects.requireNonNull(GetNodeById(AllNodes.get(i).outer_connections.get(j).group_connection_node_id)).graph_id,
                             AllNodes.get(i).id, AllNodes.get(i).outer_connections.get(j).group_connection_node_id));
                 }
             } else if(AllNodes.get(i) instanceof InnerNode){
@@ -170,6 +174,12 @@ public class Generator {
                         AllNodes.get(i).id, AllNodes.get(i).connection_id));
             }
         }
+        graph = new Graph(edges2, edges2.size());
+
+    }
+
+    public static void testPrintPath(){
+
     }
 
     public static void printAllNodeGroups(){
@@ -437,7 +447,8 @@ public class Generator {
         return false;
     }
 
-    public static Stack<Integer> CalculateRandomPathMod(Graph graph, int total_number_of_edges, int total_number_of_nodes, int source_graph_id, int destination_graph_id) throws Exception {
+    public static Stack<Integer> CalculateRandomPathMod(Graph graph, int total_number_of_edges, int total_number_of_nodes,
+                                                        int source_graph_id, int destination_graph_id) throws Exception {
         boolean[] discovered = new boolean[total_number_of_edges*2];
         boolean[] discovered2 = new boolean[total_number_of_edges*2];
         Stack<Integer> path = new Stack<>();
@@ -683,12 +694,6 @@ public class Generator {
         return converted_speed/10;
     }
 
-//    public static double[] CalculateLatitudeAndLongitudeByDistance(double point_latitude, double point_longitude,
-//    double distance, double bearing){
-//        //TODO
-//        //https://www.igismap.com/formula-to-find-bearing-or-heading-angle-between-two-points-latitude-longitude/
-//    }
-
     public static void CreateNodes() throws IOException, ParseException {
         //Every single node where a dynamic object may appear(A highway, a road, e.t.c.)
         //And its relation is to be organised in the node structure(Node and NodeGroup objects
@@ -728,19 +733,21 @@ public class Generator {
                         //CONNECTIONS AND GRAPH IDS are at first unpopulated
                         if (j == coordinates.size() - 1) {
                             int id = rand.nextInt(50000) + 1;
-                            int graph_id = rand.nextInt(50000) + 1;
-                            if (IsNodeIdUnique(id) && IsGraphIdUnique(graph_id)) {
+                            int graph_id = node_graph_ids.size();
+                            if (IsNodeIdUnique(id)) {
                                 OuterNode node = new OuterNode(id, (double) lat_and_long.get(0),
                                         (double) lat_and_long.get(1), group_id, null, graph_id);
                                 node_ids.add(id);
+                                node_graph_ids.add(id);
                                 group_nodes.add(node);
                                 //AllNodes.add(node);
                             }
                             else{
                                 OuterNode node = new OuterNode(rand.nextInt(50000) + 1,
                                         (double) lat_and_long.get(0), (double) lat_and_long.get(1), group_id,
-                                        null, rand.nextInt(50000) + 1);
+                                        null, graph_id);
                                 node_ids.add(id);
+                                node_graph_ids.add(id);
                                 group_nodes.add(node);
                                 //AllNodes.add(node);
                             }
@@ -748,16 +755,18 @@ public class Generator {
                         //Other nodes shall be inner nodes
                         else {
                             int id = rand.nextInt(50000) + 1;
-                            int graph_id = rand.nextInt(50000) + 1;
+                            int graph_id = node_graph_ids.size();
                             if (IsNodeIdUnique(id)) {
                                 InnerNode node = new InnerNode(id, (double) lat_and_long.get(0), (double) lat_and_long.get(1), 0, group_id, graph_id);
                                 node_ids.add(id);
+                                node_graph_ids.add(graph_id);
                                 group_nodes.add(node);
                                 //AllNodes.add(node);
                             }
                             else{
                                 InnerNode node = new InnerNode(id, (double) lat_and_long.get(0), (double) lat_and_long.get(1), 0, group_id, graph_id);
                                 node_ids.add(id);
+                                node_graph_ids.add(graph_id);
                                 group_nodes.add(node);
                                 //AllNodes.add(node);
                             }
