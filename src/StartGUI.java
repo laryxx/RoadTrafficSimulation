@@ -2,6 +2,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.time.LocalTime;
 import java.util.ArrayList;
 
 public class StartGUI {
@@ -92,7 +93,7 @@ public class StartGUI {
         start_hour.setBounds(15, 50, 38, 22);
 
         SpinnerModel value2 =
-                new SpinnerNumberModel(30, //initial value
+                new SpinnerNumberModel(59, //initial value
                         0, //minimum value
                         60, //maximum value
                         1); //step
@@ -124,7 +125,7 @@ public class StartGUI {
         fps2.setBounds(80, 110, 50, 30);
         ButtonGroup group = new ButtonGroup();
         group.add(fps1);
-        group.add(fps2);
+        //group.add(fps2);
 
         start_panel = new JPanel();
         start_panel.setBackground(Color.white);
@@ -142,7 +143,7 @@ public class StartGUI {
         mainFrame.add(m2);
         mainFrame.add(framerate);
         mainFrame.add(fps1);
-        mainFrame.add(fps2);
+        //mainFrame.add(fps2);
         mainFrame.add(start_panel);
 
         mainFrame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
@@ -167,7 +168,12 @@ public class StartGUI {
             String command = e.getActionCommand();
             if (command.equals("       Start       ")) {
                 try {
-                    Generator.Start(rules);
+                    LocalTime StartTime = LocalTime.of((int)start_hour.getValue(), (int)start_minute.getValue(),
+                            0, 0);
+                    LocalTime EndTime = LocalTime.of((int)end_hour.getValue(), (int)end_minute.getValue(),
+                            0, 0);
+                    SimulationProperties properties = new SimulationProperties(StartTime, EndTime, 10);
+                    Generator.Start(rules, properties);
                 } catch (Exception exception) {
                     exception.printStackTrace();
                 }

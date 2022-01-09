@@ -6,6 +6,8 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.time.Duration;
+import java.time.LocalTime;
 import java.util.*;
 import org.json.simple.*;
 
@@ -22,6 +24,7 @@ public class Generator {
     public static HashSet<Integer> vehicle_ids = new HashSet<Integer>();
     public static HashSet<Integer> node_ids = new HashSet<>();
     public static HashSet<Integer> node_graph_ids = new HashSet<>();
+    public static SimulationProperties properties = new SimulationProperties();
 
     public static void main(String[] args) throws Exception {
         double la1 = 14.3811433;
@@ -87,8 +90,7 @@ public class Generator {
 
     }
 
-
-    public static void Start(ArrayList<GenerationRule> input_rules) throws Exception {
+    public static void Start(ArrayList<GenerationRule> input_rules, SimulationProperties input_properties) throws Exception {
 
 //        rules = input_rules;
 //
@@ -116,6 +118,7 @@ public class Generator {
 //
 //        GenerateCar(real_path);
 
+        properties = input_properties;
         CreateNodes();
         PopulateGraph();
         printAllNodeGroups();
@@ -144,8 +147,13 @@ public class Generator {
         GenerationRule rule = new GenerationRule(0.3, 0.4, 0.3, GetNodeByGraphId(3), GetNodeByGraphId(40), 5);
         rules.add(rule);
         System.out.println("TOTAL NUMBER OF NODES ---------" + AllNodes.size());
-        StartTimer(100, 0);
+        //int sec = CalculateSimulationTime();
+        StartTimer(CalculateSimulationTime(), 0);
+    }
 
+    public static int CalculateSimulationTime(){
+        return (properties.end_time.getHour()*3600 + properties.end_time.getMinute()*60) -
+                (properties.start_time.getHour()*3600 + properties.start_time.getMinute()*60);
     }
 
     public static DefaultNode GetNodeByGraphId(int id){
