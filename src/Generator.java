@@ -138,7 +138,23 @@ public class Generator {
         //StartTimer(10, 0);
 
         //Manual creation of a graph + populating it with a specific nodegroup nodes.
-//        Stack<Integer> path = CalculateRandomPathMod(graph, 50000, 50000, )
+        System.out.println(node_graph_ids);
+//        Stack<Integer> path = CalculateRandomPathMod(graph, graph.adjacency_list.size(), graph.number_of_nodes, 0, 10);
+//        ArrayList<DefaultNode> real_path = GetRealPathFromGraphPath(path);
+        GenerationRule rule = new GenerationRule(0.3, 0.4, 0.3, GetNodeByGraphId(3), GetNodeByGraphId(40), 5);
+        rules.add(rule);
+        System.out.println("TOTAL NUMBER OF NODES ---------" + AllNodes.size());
+        StartTimer(100, 0);
+
+    }
+
+    public static DefaultNode GetNodeByGraphId(int id){
+        for(int i = 0; i < AllNodes.size(); i++){
+            if(AllNodes.get(i).graph_id == id){
+                return AllNodes.get(i);
+            }
+        }
+        return null;
     }
 
     public static void NavigateNodeGroup(NodeGroup group){
@@ -175,7 +191,6 @@ public class Generator {
             }
         }
         graph = new Graph(edges2, edges2.size());
-
     }
 
     public static void testPrintPath(){
@@ -213,13 +228,20 @@ public class Generator {
         System.out.println("Rule size: " + rules.size());
     }
 
-    public static ArrayList<DefaultNode> getRealPathFromGraphPath(Stack<Integer> graph_path){
+//    public static ArrayList<DefaultNode> GetRealPathFromGraphPath(Stack<Integer> graph_path){
+//        ArrayList<DefaultNode> path = new ArrayList<>();
+//        for(int i = 0; i < graph_path.size(); i++){
+//            if(graph_path.contains(AllNodes.get(i).graph_id)){
+//                path.add(graph_path.get(AllNodes.get(i).graph_id), AllNodes.get(i));
+//            }
+//        }
+//        return path;
+//    }
+
+    public static ArrayList<DefaultNode> GetRealPathFromGraphPath(Stack<Integer> graph_path){
         ArrayList<DefaultNode> path = new ArrayList<>();
-        //TODO
         for(int i = 0; i < graph_path.size(); i++){
-            if(graph_path.contains(AllNodes.get(i).graph_id)){
-                path.add(graph_path.get(AllNodes.get(i).graph_id), AllNodes.get(i));
-            }
+            path.add(GetNodeByGraphId(graph_path.get(i)));
         }
         return path;
     }
@@ -304,7 +326,7 @@ public class Generator {
         stack_path = CalculateRandomPathMod(graph, graph.adjacency_list.size(), graph.number_of_nodes, rule.source_node.graph_id, rule.destination_node.graph_id);
         System.out.println("SIZE____" + stack_path.size());
         ArrayList<DefaultNode> real_path = new ArrayList<DefaultNode>();
-        real_path = getRealPathFromGraphPath(stack_path);
+        real_path = GetRealPathFromGraphPath(stack_path);
         String type = DecideOnCarType(rule);
         switch (type) {
             case "Truck" -> {
@@ -738,7 +760,7 @@ public class Generator {
                                 OuterNode node = new OuterNode(id, (double) lat_and_long.get(0),
                                         (double) lat_and_long.get(1), group_id, null, graph_id);
                                 node_ids.add(id);
-                                node_graph_ids.add(id);
+                                node_graph_ids.add(graph_id);
                                 group_nodes.add(node);
                                 //AllNodes.add(node);
                             }
@@ -747,7 +769,7 @@ public class Generator {
                                         (double) lat_and_long.get(0), (double) lat_and_long.get(1), group_id,
                                         null, graph_id);
                                 node_ids.add(id);
-                                node_graph_ids.add(id);
+                                node_graph_ids.add(graph_id);
                                 group_nodes.add(node);
                                 //AllNodes.add(node);
                             }
@@ -899,7 +921,7 @@ public class Generator {
         types.add(type3);
         total.put("types", types);
         total.put("frames", frames);
-        try (FileWriter file = new FileWriter("frames.json")) {
+        try (FileWriter file = new FileWriter("new_frames.json")) {
             //We can write any JSONArray or JSONObject instance to the file
             System.out.println("Write");
             file.write(total.toJSONString());
