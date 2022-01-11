@@ -21,15 +21,18 @@ public class JSONreader {
 //        System.out.println(a1);
 //        System.out.println(a1);
 //        System.out.println(c1);
-        HashSet<Integer> ids = new HashSet<Integer>(50);
-        System.out.println(ids.size());
-        //ids.add(0);
-        for(int i = 0; i < ids.size()+1; i++){
-            int id = ids.size();
-            ids.add(id);
-            System.out.println("Added id: " + id);
-        }
-
+//        HashSet<Integer> ids = new HashSet<Integer>(50);
+//        System.out.println(ids.size());
+//        //ids.add(0);
+//        for(int i = 0; i < ids.size()+1; i++){
+//            int id = ids.size();
+//            ids.add(id);
+//            System.out.println("Added id: " + id);
+//        }
+        Object obj = new JSONParser().parse(new FileReader("generation_points.json"));
+        JSONObject map = (JSONObject) obj;
+        JSONArray nodes = (JSONArray) map.get("nodes");
+        System.out.println(nodes);
     }
 
 }

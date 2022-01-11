@@ -1,13 +1,8 @@
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
-import org.locationtech.spatial4j.shape.Point;
-
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.time.Duration;
-import java.time.LocalTime;
 import java.util.*;
 import org.json.simple.*;
 
@@ -27,45 +22,58 @@ public class Generator {
     public static SimulationProperties properties = new SimulationProperties();
 
     public static void main(String[] args) throws Exception {
-        double la1 = 14.3811433;
-        double la2 = 14.3810343;
-        double la3 = 14.3814057;
-        double la4 = 14.3819432;
-        double la5 = 14.382381;
-        double lo1 = 49.9691511;
-        double lo2 = 49.9690489;
-        double lo3 = 49.968503;
-        double lo4 = 49.967735;
-        double lo5 = 49.9671378;
-        double distance1 = CalculateDistanceInKilometers(la1, lo1, la2, lo2);
-        double distance2 = CalculateDistanceInKilometers(la2, lo2, la3, lo3);
-        double distance3 = CalculateDistanceInKilometers(la3, lo3, la4, lo4);
-        double distance4 = CalculateDistanceInKilometers(la4, lo4, la5, lo5);
-        double Sum = distance1 + distance2 + distance3 + distance4;
-        ArrayList<DefaultNode> nodeGroup1List = new ArrayList<DefaultNode>(5);
-        InnerNode node1 = new InnerNode(1, la1, lo1, 2, "1", 0);
-        InnerNode node2 = new InnerNode(2, la2, lo2, 3, "1", 1);
-        InnerNode node3 = new InnerNode(3, la3, lo3, 4, "1", 2);
-        InnerNode node4 = new InnerNode(4, la4, lo4, 5, "1", 3);
-        EndNode node5 = new EndNode(5, la5, lo5, "1", 4);
-        nodeGroup1List.add(node1);
-        nodeGroup1List.add(node2);
-        nodeGroup1List.add(node3);
-        nodeGroup1List.add(node4);
-        nodeGroup1List.add(node5);
-        NodeGroup nodeGroup1 = new NodeGroup("1", "highway", nodeGroup1List, 60);
-        nodeGroup1.setFitting_speed(nodeGroup1.fitting_speed - CalculateSpeedPenaltyByAngle(
-                nodeGroup1.getNodes().get(0).latitude, nodeGroup1.getNodes().get(0).longitude,
-                nodeGroup1.getNodes().get(nodeGroup1.getNodes().size()-1).latitude,
-                nodeGroup1.getNodes().get(nodeGroup1.getNodes().size()-1).longitude, Sum));
-        NodeGroups.add(nodeGroup1);
-        AllNodes.add(node1);
-        AllNodes.add(node2);
-        AllNodes.add(node3);
-        AllNodes.add(node4);
-        AllNodes.add(node5);
+//        double la1 = 14.3811433;
+//        double la2 = 14.3810343;
+//        double la3 = 14.3814057;
+//        double la4 = 14.3819432;
+//        double la5 = 14.382381;
+//        double lo1 = 49.9691511;
+//        double lo2 = 49.9690489;
+//        double lo3 = 49.968503;
+//        double lo4 = 49.967735;
+//        double lo5 = 49.9671378;
+//        double distance1 = CalculateDistanceInKilometers(la1, lo1, la2, lo2);
+//        double distance2 = CalculateDistanceInKilometers(la2, lo2, la3, lo3);
+//        double distance3 = CalculateDistanceInKilometers(la3, lo3, la4, lo4);
+//        double distance4 = CalculateDistanceInKilometers(la4, lo4, la5, lo5);
+//        double Sum = distance1 + distance2 + distance3 + distance4;
+//        ArrayList<DefaultNode> nodeGroup1List = new ArrayList<DefaultNode>(5);
+//        InnerNode node1 = new InnerNode(1, la1, lo1, 2, "1", 0);
+//        InnerNode node2 = new InnerNode(2, la2, lo2, 3, "1", 1);
+//        InnerNode node3 = new InnerNode(3, la3, lo3, 4, "1", 2);
+//        InnerNode node4 = new InnerNode(4, la4, lo4, 5, "1", 3);
+//        OuterNode node5 = new OuterNode(5, la5, lo5, "1", null, 4);
+//        nodeGroup1List.add(node1);
+//        nodeGroup1List.add(node2);
+//        nodeGroup1List.add(node3);
+//        nodeGroup1List.add(node4);
+//        //nodeGroup1List.add(node5);
+//        NodeGroup nodeGroup1 = new NodeGroup("1", "highway", nodeGroup1List, 60);
+//        nodeGroup1.setFitting_speed(nodeGroup1.fitting_speed - CalculateSpeedPenaltyByAngle(
+//                nodeGroup1.getNodes().get(0).latitude, nodeGroup1.getNodes().get(0).longitude,
+//                nodeGroup1.getNodes().get(nodeGroup1.getNodes().size()-1).latitude,
+//                nodeGroup1.getNodes().get(nodeGroup1.getNodes().size()-1).longitude, Sum));
+//        NodeGroups.add(nodeGroup1);
+//        AllNodes.add(node1);
+//        AllNodes.add(node2);
+//        AllNodes.add(node3);
+//        AllNodes.add(node4);
+//        AllNodes.add(node5);
 
-        GenerationRulesGUI main = new GenerationRulesGUI(AllNodes);
+        CreateNodes();
+        PopulateGraph();
+        printAllNodeGroups();
+
+        ArrayList<DefaultNode> generation_points = new ArrayList<>();
+        generation_points = ProcessGenerationPoints();
+
+        for(int i = 0; i < generation_points.size(); i++){
+            System.out.println(generation_points.get(i).id);
+        }
+
+        System.out.println("GEN Points size: " + generation_points.size());
+
+        GenerationRulesGUI main = new GenerationRulesGUI(generation_points);
         main.showEvent();
 
 
@@ -119,9 +127,7 @@ public class Generator {
 //        GenerateCar(real_path);
 
         properties = input_properties;
-        CreateNodes();
-        PopulateGraph();
-        printAllNodeGroups();
+
 
         //One-time thing
 //        double distance = CalculateDistanceInKilometers(1.2055676, 46.3978279, 1.2276719, 46.3961438);
@@ -130,25 +136,58 @@ public class Generator {
 //        System.out.println("DISTANCE BETWEEN NODEGROUPS1: " + distance*1000);
 //        System.out.println("DISTANCE BETWEEN NODEGROUPS2: " + distance2*1000);
 //        System.out.println("DISTANCE BETWEEN NODEGROUPS3: " + distance3*1000);
-        double unclass_end_lat = NodeGroups.get(NodeGroups.size()-2).Nodes.get(NodeGroups.get(NodeGroups.size()-2).Nodes.size()-1).latitude;
-        double unclass_end_long = NodeGroups.get(NodeGroups.size()-2).Nodes.get(NodeGroups.get(NodeGroups.size()-2).Nodes.size()-1).longitude;
-
-        double track_start_lat = NodeGroups.get(NodeGroups.size()-1).Nodes.get(0).latitude;
-        double track_start_long = NodeGroups.get(NodeGroups.size()-1).Nodes.get(0).longitude;
-
-        double dist = CalculateDistanceInKilometers(unclass_end_lat, unclass_end_long, track_start_lat, track_start_long);
-        System.out.println("Distance: " + dist);
+//        double unclass_end_lat = NodeGroups.get(NodeGroups.size()-2).Nodes.get(NodeGroups.get(NodeGroups.size()-2).Nodes.size()-1).latitude;
+//        double unclass_end_long = NodeGroups.get(NodeGroups.size()-2).Nodes.get(NodeGroups.get(NodeGroups.size()-2).Nodes.size()-1).longitude;
+//
+//        double track_start_lat = NodeGroups.get(NodeGroups.size()-1).Nodes.get(0).latitude;
+//        double track_start_long = NodeGroups.get(NodeGroups.size()-1).Nodes.get(0).longitude;
+//
+//        double dist = CalculateDistanceInKilometers(unclass_end_lat, unclass_end_long, track_start_lat, track_start_long);
+//        System.out.println("Distance: " + dist);
         //StartTimer(10, 0);
 
         //Manual creation of a graph + populating it with a specific nodegroup nodes.
-        System.out.println(node_graph_ids);
+//        System.out.println(node_graph_ids);
 //        Stack<Integer> path = CalculateRandomPathMod(graph, graph.adjacency_list.size(), graph.number_of_nodes, 0, 10);
 //        ArrayList<DefaultNode> real_path = GetRealPathFromGraphPath(path);
+
         GenerationRule rule = new GenerationRule(0.3, 0.4, 0.3, GetNodeByGraphId(3), GetNodeByGraphId(40), 5);
         rules.add(rule);
         System.out.println("TOTAL NUMBER OF NODES ---------" + AllNodes.size());
         //int sec = CalculateSimulationTime();
         StartTimer(CalculateSimulationTime(), 0);
+    }
+
+    public static ArrayList<DefaultNode> ProcessGenerationPoints() throws IOException, ParseException {
+        //Manual part
+        Object obj = new JSONParser().parse(new FileReader("generation_points.json"));
+        JSONObject map = (JSONObject) obj;
+        JSONArray nodes = (JSONArray) map.get("nodes");
+        ArrayList<DefaultNode> gen_points = new ArrayList<>();
+        System.out.println(nodes.size());
+        for(int i = 0; i < nodes.size(); i++) {
+            JSONObject object = (JSONObject) nodes.get(i);
+            String id = (String) object.get("id");
+            String group_id = (String) object.get("group");
+            int index = Integer.parseInt((String)object.get("index"));
+            DefaultNode node = FindNodeByGroupAndIndex(group_id, index);
+            gen_points.add(node);
+        }
+        return gen_points;
+    }
+
+    public static DefaultNode FindNodeByGroupAndIndex(String group_id, int index){
+        for(int i = 0; i < NodeGroups.size(); i++){
+            if(group_id.equals(NodeGroups.get(i).id)){
+                System.out.println("-----GROUP FOUND");
+                for(int j = 0; i < NodeGroups.get(i).Nodes.size(); j++){
+                    if(j == index){
+                        return NodeGroups.get(i).Nodes.get(j);
+                    }
+                }
+            }
+        }
+        return null;
     }
 
     public static int CalculateSimulationTime(){
@@ -170,9 +209,10 @@ public class Generator {
         for(int i = 0; i<group.Nodes.size(); i++){
             if(i == group.Nodes.size()-1){
                 //Manual setting
+                //TODO
                 ArrayList<OuterConnection> connections = new ArrayList<>();
-                OuterConnection connection = new OuterConnection(NodeGroups.get(NodeGroups.size()-1).id,
-                        NodeGroups.get(NodeGroups.size()-1).Nodes.get(0).id);
+                OuterConnection connection = new OuterConnection(group.id,
+                        group.Nodes.get(0).id);
                 connections.add(connection);
                 group.Nodes.get(i).setOuter_connections(connections);
             }
@@ -199,10 +239,6 @@ public class Generator {
             }
         }
         graph = new Graph(edges2, edges2.size());
-    }
-
-    public static void testPrintPath(){
-
     }
 
     public static void printAllNodeGroups(){
@@ -644,7 +680,6 @@ public class Generator {
                 car.setSpeed(ManageSpeed(car.intent, car.speed, car.fitting_speed, car.acceleration_rate));
             }
             //At last, we update the latitude and longitude parameters:
-            Point point;
             DefaultNode carLastVisitedNode = getNodeFromID(car.getLast_visited_node_id());
             Pair pair = GetNextNodeInPathIdAndPositionInArr(car.path, car.last_visited_node_id);
 
@@ -733,83 +768,83 @@ public class Generator {
 
         JSONArray features = (JSONArray) map.get("features");
         for (int i = 0; i < features.size(); i++) {
-            Object current = new Object();
-            current = features.get(i);
+            Object current = features.get(i);
             JSONObject curr = (JSONObject) features.get(i);
-            JSONObject properties = new JSONObject();
-            properties = (JSONObject) ((JSONObject) current).get("properties");
+            JSONObject properties = (JSONObject) curr.get("properties");
+            System.out.println(properties);
             String str = (String) properties.get("highway");
             Random rand = new Random();
-            if (str != null) {
-                String group_id = (String) curr.get("id");
-                //group_id = group_id.substring(4);
-                group_id = group_id.replaceAll("[^1-9]", "");
-                //int groupId = Integer.parseInt(group_id);
-                System.out.println("GROUP ID: " + group_id);
-                System.out.println(str);
-                ArrayList<DefaultNode> group_nodes = new ArrayList<>();
-                NodeGroup group = new NodeGroup(group_id, str, group_nodes, 60);
-                //Object geometry = ((JSONObject) current).get("geometry");
-                JSONObject geometry = (JSONObject) ((JSONObject) current).get("geometry");
-                JSONArray coordinates = (JSONArray) geometry.get("coordinates");
-                for (int j = 0; j < coordinates.size(); j++) {
+            System.out.println(str);
+            if(str != null) {
+                if (str.equals("motorway") || str.equals("trunk") || str.equals("primary") || str.equals("secondary") ||
+                        str.equals("tertiary") || str.equals("unclassified") || str.equals("residential") ||
+                str.equals("track") || str.equals("road")) {
+                    String group_id = (String) curr.get("id");
+                    //group_id = group_id.substring(4);
+                    group_id = group_id.replaceAll("[^0-9]", "");
+                    //int groupId = Integer.parseInt(group_id);
+                    System.out.println("GROUP ID: " + group_id);
+                    System.out.println("---------------" + str);
+                    ArrayList<DefaultNode> group_nodes = new ArrayList<>();
+                    NodeGroup group = new NodeGroup(group_id, str, group_nodes, 60);
+                    //Object geometry = ((JSONObject) current).get("geometry");
+                    JSONObject geometry = (JSONObject) ((JSONObject) current).get("geometry");
+                    JSONArray coordinates = (JSONArray) geometry.get("coordinates");
+                    for (int j = 0; j < coordinates.size(); j++) {
 
-                    System.out.println(coordinates.get(j));
-                    if (coordinates.get(j) instanceof JSONArray && !str.equals("stop")) {
-                        JSONArray lat_and_long = (JSONArray) coordinates.get(j);
+                        System.out.println(coordinates.get(j));
+                        if (coordinates.get(j) instanceof JSONArray) {
+                            JSONArray lat_and_long = (JSONArray) coordinates.get(j);
 
-                        System.out.println("lat: " + lat_and_long.get(0));
-                        //The first and last nodes are outer nodes
-                        //CONNECTIONS AND GRAPH IDS are at first unpopulated
-                        if (j == coordinates.size() - 1) {
-                            int id = rand.nextInt(50000) + 1;
-                            int graph_id = node_graph_ids.size();
-                            if (IsNodeIdUnique(id)) {
-                                OuterNode node = new OuterNode(id, (double) lat_and_long.get(0),
-                                        (double) lat_and_long.get(1), group_id, null, graph_id);
-                                node_ids.add(id);
-                                node_graph_ids.add(graph_id);
-                                group_nodes.add(node);
-                                //AllNodes.add(node);
+                            System.out.println("lat: " + lat_and_long.get(0));
+                            //The first and last nodes are outer nodes
+                            //CONNECTIONS AND GRAPH IDS are at first unpopulated
+                            if (j == coordinates.size() - 1) {
+                                int id = rand.nextInt(50000) + 1;
+                                int graph_id = node_graph_ids.size();
+                                if (IsNodeIdUnique(id)) {
+                                    OuterNode node = new OuterNode(id, (double) lat_and_long.get(0),
+                                            (double) lat_and_long.get(1), group_id, null, graph_id);
+                                    node_ids.add(id);
+                                    node_graph_ids.add(graph_id);
+                                    group_nodes.add(node);
+                                    //AllNodes.add(node);
+                                } else {
+                                    OuterNode node = new OuterNode(rand.nextInt(50000) + 1,
+                                            (double) lat_and_long.get(0), (double) lat_and_long.get(1), group_id,
+                                            null, graph_id);
+                                    node_ids.add(id);
+                                    node_graph_ids.add(graph_id);
+                                    group_nodes.add(node);
+                                    //AllNodes.add(node);
+                                }
                             }
-                            else{
-                                OuterNode node = new OuterNode(rand.nextInt(50000) + 1,
-                                        (double) lat_and_long.get(0), (double) lat_and_long.get(1), group_id,
-                                        null, graph_id);
-                                node_ids.add(id);
-                                node_graph_ids.add(graph_id);
-                                group_nodes.add(node);
-                                //AllNodes.add(node);
-                            }
-                        }
-                        //Other nodes shall be inner nodes
-                        else {
-                            int id = rand.nextInt(50000) + 1;
-                            int graph_id = node_graph_ids.size();
-                            if (IsNodeIdUnique(id)) {
-                                InnerNode node = new InnerNode(id, (double) lat_and_long.get(0), (double) lat_and_long.get(1), 0, group_id, graph_id);
-                                node_ids.add(id);
-                                node_graph_ids.add(graph_id);
-                                group_nodes.add(node);
-                                //AllNodes.add(node);
-                            }
-                            else{
-                                InnerNode node = new InnerNode(id, (double) lat_and_long.get(0), (double) lat_and_long.get(1), 0, group_id, graph_id);
-                                node_ids.add(id);
-                                node_graph_ids.add(graph_id);
-                                group_nodes.add(node);
-                                //AllNodes.add(node);
+                            //Other nodes shall be inner nodes
+                            else {
+                                int id = rand.nextInt(50000) + 1;
+                                int graph_id = node_graph_ids.size();
+                                if (IsNodeIdUnique(id)) {
+                                    InnerNode node = new InnerNode(id, (double) lat_and_long.get(0), (double) lat_and_long.get(1), 0, group_id, graph_id);
+                                    node_ids.add(id);
+                                    node_graph_ids.add(graph_id);
+                                    group_nodes.add(node);
+                                    //AllNodes.add(node);
+                                } else {
+                                    InnerNode node = new InnerNode(id, (double) lat_and_long.get(0), (double) lat_and_long.get(1), 0, group_id, graph_id);
+                                    node_ids.add(id);
+                                    node_graph_ids.add(graph_id);
+                                    group_nodes.add(node);
+                                    //AllNodes.add(node);
+                                }
                             }
                         }
                     }
-                }
-                group.setNodes(group_nodes);
-                if(!str.equals("stop")) {
+                    group.setNodes(group_nodes);
                     NavigateNodeGroup(group);
                     NodeGroups.add(group);
                     AllNodes.addAll(group.Nodes);
+                    System.out.println("Node count: ______ " + group_nodes.size());
                 }
-                System.out.println("Node count: ______ " + group_nodes.size());
             }
         }
     }
@@ -899,7 +934,7 @@ public class Generator {
         JSONArray positions = new JSONArray();
         for(int i = 0; i < Cars.size(); i++){
             JSONObject frameDetails = new JSONObject();
-            frameDetails.put("id", Cars.get(i).id);
+            frameDetails.put("type", Cars.get(i).toString());
             frameDetails.put("lat", Cars.get(i).latitude);
             frameDetails.put("lon", Cars.get(i).longitude);
             frameDetails.put("angle", Cars.get(i).angle);

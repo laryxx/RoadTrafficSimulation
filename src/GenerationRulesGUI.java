@@ -1,11 +1,17 @@
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 
 import javax.swing.*;
 import javax.swing.border.Border;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -37,7 +43,7 @@ public class GenerationRulesGUI {
     public JLabel label_intensity;
     public static ArrayList<GenerationRule> rules = new ArrayList<GenerationRule>();
 
-    public GenerationRulesGUI(ArrayList<DefaultNode> SelectableGenerationNodes){
+    public GenerationRulesGUI(ArrayList<DefaultNode> SelectableGenerationNodes) throws IOException, ParseException {
         this.SelectableGenerationNodes = SelectableGenerationNodes;
         prepareGUI();
     }
@@ -46,7 +52,7 @@ public class GenerationRulesGUI {
 
     }
 
-    private void prepareGUI(){
+    private void prepareGUI() throws IOException, ParseException {
         mainFrame = new JFrame("Define traffic generation rules");
 
         Border border2 = BorderFactory.createLineBorder(Color.black, 2);
@@ -69,11 +75,10 @@ public class GenerationRulesGUI {
 
         String[] node_ids = {};
 
-        for(int i = 0; i < SelectableGenerationNodes.size(); i++){
-            node_ids = addEl(node_ids, "Node " + (String.valueOf(SelectableGenerationNodes.get(i).id)));
-        }
 
-        String[] points = {"Node1", "Node2", "Node3", "Node4", "Node5"};
+        for(int i = 0; i < SelectableGenerationNodes.size(); i++){
+            node_ids = addEl(node_ids, "Node " + (SelectableGenerationNodes.get(i).id));
+        }
 
         source_list = new JComboBox<String>(node_ids);
         source_list.setBorder(border2);

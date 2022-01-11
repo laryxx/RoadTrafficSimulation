@@ -11,4 +11,9 @@ public class Sedan extends Vehicle{
                 group_nodes_left, sum_of_node_distances, acceleration_rate, latitude, longitude, angle);
     }
 
+    @Override
+    public String toString() {
+        return "Sedan";
+    }
+
 }

@@ -24,13 +24,13 @@ public abstract class DefaultNode {
     }
 
     //EndNode
-    public DefaultNode(int id, double latitude, double longitude, String group_id, int graph_id) {
-        this.id = id;
-        this.latitude = latitude;
-        this.longitude = longitude;
-        this.group_id = group_id;
-        this.graph_id = graph_id;
-    }
+//    public DefaultNode(int id, double latitude, double longitude, String group_id, int graph_id) {
+//        this.id = id;
+//        this.latitude = latitude;
+//        this.longitude = longitude;
+//        this.group_id = group_id;
+//        this.graph_id = graph_id;
+//    }
 
     //InnerNode
     public DefaultNode(int id, double latitude, double longitude, int connection_id, String group_id, int graph_id) {
@@ -43,13 +43,13 @@ public abstract class DefaultNode {
     }
 
     //LoneNode
-    public DefaultNode(int id,  ArrayList<OuterConnection> outer_connections, double latitude, double longitude, int graph_id){
-        this.id = id;
-        this.outer_connections = outer_connections;
-        this.latitude = latitude;
-        this.longitude = longitude;
-        this.graph_id = graph_id;
-    }
+//    public DefaultNode(int id,  ArrayList<OuterConnection> outer_connections, double latitude, double longitude, int graph_id){
+//        this.id = id;
+//        this.outer_connections = outer_connections;
+//        this.latitude = latitude;
+//        this.longitude = longitude;
+//        this.graph_id = graph_id;
+//    }
 
     public void setId(int id) {
         this.id = id;

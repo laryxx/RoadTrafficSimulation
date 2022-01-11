@@ -33,7 +33,7 @@ double acceleration_rate;
 
     }
 
-    //Truck
+    //Any vehicle
     public Vehicle(int id, int start_mode_id, int destination_node_id, ArrayList<DefaultNode> path, Intent intent,
                    double speed, double path_distance_in_km, int last_visited_node_id, double progress_in_km,
                    int weight_in_kg, double distance_to_next_node, double progress_since_last_node_in_km,

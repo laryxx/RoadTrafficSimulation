@@ -11,4 +11,9 @@ public class Truck extends Vehicle{
                 progress_in_km, weight_in_kg, distance_to_next_node, progress_since_last_node_in_km, fitting_speed,
                 group_nodes_left, sum_of_node_distances, acceleration_rate, latitude, longitude, angle);
     }
+
+    @Override
+    public String toString() {
+        return "Truck";
+    }
 }
