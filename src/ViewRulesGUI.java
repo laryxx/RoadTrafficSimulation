@@ -111,8 +111,16 @@ public class ViewRulesGUI {
             else if(command.equals("            View on the map            ")){
                 var values = new HashMap<String, Integer>() {{
                     GenerationRule selected_rule = GenerationRulesGUI.rules.get(rules_view.getSelectedIndex());
-                    put("source", selected_rule.source_node.id);
-                    put ("destination", selected_rule.destination_node.id);
+                    try {
+                        put("source", Generator.ReturnJsonIdByNodeId(selected_rule.source_node.id));
+                    } catch (Exception exception) {
+                        exception.printStackTrace();
+                    }
+                    try {
+                        put ("destination", Generator.ReturnJsonIdByNodeId(selected_rule.destination_node.id));
+                    } catch (Exception exception) {
+                        exception.printStackTrace();
+                    }
                 }};
                 var objectMapper = new ObjectMapper();
                 String requestBody = "";

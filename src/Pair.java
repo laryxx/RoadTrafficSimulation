@@ -6,6 +6,10 @@ public class Pair {
     double latitude;
     double longitude;
 
+    public Pair(){
+
+    }
+
     public Pair(int x, int y){
         this.x = x;
         this.y = y;

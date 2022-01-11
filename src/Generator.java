@@ -20,45 +20,9 @@ public class Generator {
     public static HashSet<Integer> node_ids = new HashSet<>();
     public static HashSet<Integer> node_graph_ids = new HashSet<>();
     public static SimulationProperties properties = new SimulationProperties();
+    public static ArrayList<Pair> gen_points_data = new ArrayList<Pair>();
 
     public static void main(String[] args) throws Exception {
-//        double la1 = 14.3811433;
-//        double la2 = 14.3810343;
-//        double la3 = 14.3814057;
-//        double la4 = 14.3819432;
-//        double la5 = 14.382381;
-//        double lo1 = 49.9691511;
-//        double lo2 = 49.9690489;
-//        double lo3 = 49.968503;
-//        double lo4 = 49.967735;
-//        double lo5 = 49.9671378;
-//        double distance1 = CalculateDistanceInKilometers(la1, lo1, la2, lo2);
-//        double distance2 = CalculateDistanceInKilometers(la2, lo2, la3, lo3);
-//        double distance3 = CalculateDistanceInKilometers(la3, lo3, la4, lo4);
-//        double distance4 = CalculateDistanceInKilometers(la4, lo4, la5, lo5);
-//        double Sum = distance1 + distance2 + distance3 + distance4;
-//        ArrayList<DefaultNode> nodeGroup1List = new ArrayList<DefaultNode>(5);
-//        InnerNode node1 = new InnerNode(1, la1, lo1, 2, "1", 0);
-//        InnerNode node2 = new InnerNode(2, la2, lo2, 3, "1", 1);
-//        InnerNode node3 = new InnerNode(3, la3, lo3, 4, "1", 2);
-//        InnerNode node4 = new InnerNode(4, la4, lo4, 5, "1", 3);
-//        OuterNode node5 = new OuterNode(5, la5, lo5, "1", null, 4);
-//        nodeGroup1List.add(node1);
-//        nodeGroup1List.add(node2);
-//        nodeGroup1List.add(node3);
-//        nodeGroup1List.add(node4);
-//        //nodeGroup1List.add(node5);
-//        NodeGroup nodeGroup1 = new NodeGroup("1", "highway", nodeGroup1List, 60);
-//        nodeGroup1.setFitting_speed(nodeGroup1.fitting_speed - CalculateSpeedPenaltyByAngle(
-//                nodeGroup1.getNodes().get(0).latitude, nodeGroup1.getNodes().get(0).longitude,
-//                nodeGroup1.getNodes().get(nodeGroup1.getNodes().size()-1).latitude,
-//                nodeGroup1.getNodes().get(nodeGroup1.getNodes().size()-1).longitude, Sum));
-//        NodeGroups.add(nodeGroup1);
-//        AllNodes.add(node1);
-//        AllNodes.add(node2);
-//        AllNodes.add(node3);
-//        AllNodes.add(node4);
-//        AllNodes.add(node5);
 
         CreateNodes();
         PopulateGraph();
@@ -76,85 +40,13 @@ public class Generator {
         GenerationRulesGUI main = new GenerationRulesGUI(generation_points);
         main.showEvent();
 
-
-//        System.out.println("TEST PATH CALCULATION");
-//
-//                List<Edge> edges = Arrays.asList(new Edge(0, 1, 0, 0),
-//                new Edge(1, 2, 0, 0), new Edge(1, 3, 0, 0),
-//                new Edge(1, 4, 0, 0), new Edge(2, 11, 0, 0),
-//                new Edge(11, 12, 0, 0), new Edge(12, 3, 0, 0),
-//                new Edge(3, 12, 0, 0), new Edge(12, 8, 0, 0),
-//                new Edge(8, 3, 0, 0), new Edge(3, 8, 0, 0),
-//                new Edge(8, 4, 0, 0), new Edge(4, 5, 0, 0),
-//                new Edge(5, 6, 0, 0), new Edge(6, 10, 0, 0),
-//                new Edge(6, 7, 0, 0), new Edge(7, 6, 0, 0),
-//                new Edge(7, 8, 0, 0));
-//
-//
-//        graph = new Graph(edges, edges.size());
-//        Stack<Integer> path = CalculateRandomPathMod(graph, graph.adjacency_list.size(), graph.number_of_nodes, 0,  10);
-//        System.out.println("The complete path is " + path);
-
-
     }
 
     public static void Start(ArrayList<GenerationRule> input_rules, SimulationProperties input_properties) throws Exception {
-
-//        rules = input_rules;
-//
-//        System.out.println("\n-------NEW RUN--------\n");
-//
-//        ArrayList<Edge> edges2 = new ArrayList<>();
-//
-//        edges2.add(new Edge(0,1,1,2));
-//        edges2.add(new Edge(1,2,2,3));
-//        edges2.add(new Edge(2,3,3,4));
-//        edges2.add(new Edge(3,4,4,5));
-//
-//        Graph graph2 = new Graph(edges2, 4);
-//        graph = graph2;
-
-//        ----------------
-
-//        Stack<Integer> path2 = CalculateRandomPath(graph2, 5, 5, 0,  4);
-//        System.out.println("The complete path is " + path2);
-//
-//        ArrayList<DefaultNode> real_path = getRealPathFromGraphPath(path2);
-//        for(int i = 0; i < real_path.size(); i++){
-//            System.out.println(real_path.get(i).graph_id + " AND " + real_path.get(i).id);
-//        }
-//
-//        GenerateCar(real_path);
-
         properties = input_properties;
-
-
-        //One-time thing
-//        double distance = CalculateDistanceInKilometers(1.2055676, 46.3978279, 1.2276719, 46.3961438);
-//        double distance2 = CalculateDistanceInKilometers(1.2055676, 46.3978279, 1.2285784, 46.4002829);
-//        double distance3 = CalculateDistanceInKilometers(1.2276719, 46.3961438, 1.2276719, 46.3961438);
-//        System.out.println("DISTANCE BETWEEN NODEGROUPS1: " + distance*1000);
-//        System.out.println("DISTANCE BETWEEN NODEGROUPS2: " + distance2*1000);
-//        System.out.println("DISTANCE BETWEEN NODEGROUPS3: " + distance3*1000);
-//        double unclass_end_lat = NodeGroups.get(NodeGroups.size()-2).Nodes.get(NodeGroups.get(NodeGroups.size()-2).Nodes.size()-1).latitude;
-//        double unclass_end_long = NodeGroups.get(NodeGroups.size()-2).Nodes.get(NodeGroups.get(NodeGroups.size()-2).Nodes.size()-1).longitude;
-//
-//        double track_start_lat = NodeGroups.get(NodeGroups.size()-1).Nodes.get(0).latitude;
-//        double track_start_long = NodeGroups.get(NodeGroups.size()-1).Nodes.get(0).longitude;
-//
-//        double dist = CalculateDistanceInKilometers(unclass_end_lat, unclass_end_long, track_start_lat, track_start_long);
-//        System.out.println("Distance: " + dist);
-        //StartTimer(10, 0);
-
-        //Manual creation of a graph + populating it with a specific nodegroup nodes.
-//        System.out.println(node_graph_ids);
-//        Stack<Integer> path = CalculateRandomPathMod(graph, graph.adjacency_list.size(), graph.number_of_nodes, 0, 10);
-//        ArrayList<DefaultNode> real_path = GetRealPathFromGraphPath(path);
-
         GenerationRule rule = new GenerationRule(0.3, 0.4, 0.3, GetNodeByGraphId(3), GetNodeByGraphId(40), 5);
         rules.add(rule);
         System.out.println("TOTAL NUMBER OF NODES ---------" + AllNodes.size());
-        //int sec = CalculateSimulationTime();
         StartTimer(CalculateSimulationTime(), 0);
     }
 
@@ -171,6 +63,9 @@ public class Generator {
             String group_id = (String) object.get("group");
             int index = Integer.parseInt((String)object.get("index"));
             DefaultNode node = FindNodeByGroupAndIndex(group_id, index);
+            assert node != null;
+            Pair gen_id_and_node_id = new Pair(Integer.parseInt(id), node.id);
+            gen_points_data.add(gen_id_and_node_id);
             gen_points.add(node);
         }
         return gen_points;
@@ -190,6 +85,15 @@ public class Generator {
         return null;
     }
 
+    public static int ReturnJsonIdByNodeId(int node_id) throws Exception {
+        for(int i = 0; i < gen_points_data.size(); i++){
+            if(gen_points_data.get(i).y == node_id){
+                return gen_points_data.get(i).x;
+            }
+        }
+        throw new Exception("Error finding generation point");
+    }
+
     public static int CalculateSimulationTime(){
         return (properties.end_time.getHour()*3600 + properties.end_time.getMinute()*60) -
                 (properties.start_time.getHour()*3600 + properties.start_time.getMinute()*60);
@@ -205,10 +109,8 @@ public class Generator {
     }
 
     public static void NavigateNodeGroup(NodeGroup group){
-        //TODO
         for(int i = 0; i<group.Nodes.size(); i++){
             if(i == group.Nodes.size()-1){
-                //Manual setting
                 //TODO
                 ArrayList<OuterConnection> connections = new ArrayList<>();
                 OuterConnection connection = new OuterConnection(group.id,
@@ -272,16 +174,6 @@ public class Generator {
         System.out.println("Rule size: " + rules.size());
     }
 
-//    public static ArrayList<DefaultNode> GetRealPathFromGraphPath(Stack<Integer> graph_path){
-//        ArrayList<DefaultNode> path = new ArrayList<>();
-//        for(int i = 0; i < graph_path.size(); i++){
-//            if(graph_path.contains(AllNodes.get(i).graph_id)){
-//                path.add(graph_path.get(AllNodes.get(i).graph_id), AllNodes.get(i));
-//            }
-//        }
-//        return path;
-//    }
-
     public static ArrayList<DefaultNode> GetRealPathFromGraphPath(Stack<Integer> graph_path){
         ArrayList<DefaultNode> path = new ArrayList<>();
         for(int i = 0; i < graph_path.size(); i++){
@@ -325,20 +217,6 @@ public class Generator {
         System.out.println("The difference in proportion is: " + difference_in_proportion + "..");
         double penalty = (difference_in_proportion-1)*coefficient;
         return (difference_in_proportion-1)*coefficient*100;
-    }
-
-    public static void GenerateCar(ArrayList<DefaultNode> path){
-        //ID's should be generate automatically, but for now we'll leave it this way.
-        //We also assume that the path has already been calculated.
-        Truck truck1 = new Truck(1, 1, 5, path, Intent.ACCELERATE, 0,
-                CalculateDistanceInKilometers(path.get(0).latitude, path.get(0).longitude,
-                        path.get(path.size()-1).latitude, path.get(path.size()-1).longitude),
-                1, 0, 2500, CalculateDistanceInKilometers(path.get(0).latitude,
-                path.get(0).longitude, path.get(1).latitude, path.get(1).longitude), 0,
-                NodeGroups.get(0).fitting_speed, NodeGroups.get(0).Nodes.size()-1, 0,
-                4.0, 14.3811433, 49.9691511, 0);
-        Cars.add(truck1);
-        //TODO
     }
 
     public static boolean IsIdUnique(int id){
@@ -544,42 +422,6 @@ public class Generator {
         return CalculateRandomPathMod(graph, total_number_of_edges, total_number_of_nodes, source_graph_id, mid_point_id);
     }
 
-    public static Stack<Integer> CalculateRandomPath(Graph graph, int total_number_of_edges, int total_number_of_nodes, int source_graph_id, int destination_graph_id){
-        //to keep track of whether a vertex is discovered or not
-        boolean[] discovered = new boolean[total_number_of_edges];
-        // To store the complete path between source and destination
-        Stack<Integer> path = new Stack<>();
-        //First, we find the random point to reach in the graph,
-        //before we head out to the destination
-        int mid_point_id = GetRandomPointGraphID(total_number_of_nodes);
-        //then, we find if a straight path from source to destination exists
-        if(CalculatePath(graph, source_graph_id, destination_graph_id, discovered, path)){
-            //then, we calculate if the path from source to midpoint AND
-            //path from midpoint to destination both exist\
-            discovered = new boolean[discovered.length];
-            Stack<Integer> path_copy = new Stack<Integer>();
-            //path_copy.addAll(path);
-            if(CalculatePath(graph, source_graph_id, mid_point_id, discovered, path_copy)){
-                discovered = new boolean[discovered.length];
-                //Removing the duplicate midpoint in the path
-                path_copy.pop();
-                if(CalculatePath(graph, mid_point_id, destination_graph_id, discovered, path_copy)){
-                    System.out.println("Path exists from vertex " + source_graph_id + " to vertex " + mid_point_id +
-                            " to vertex " + destination_graph_id);
-                    System.out.println("The complete path is " + path_copy);
-                    return path_copy;
-                }
-                else{
-                    return path;
-                }
-            }
-            else{
-                return path;
-            }
-        }
-        return CalculateRandomPath(graph, total_number_of_edges, total_number_of_nodes, source_graph_id, GetRandomPointGraphID(total_number_of_nodes));
-    }
-
     public static void StartTimer(int seconds, int frame) throws Exception {
         //TODO
         //Assuming that for every iteration 1/10th of a second passes in a simulation
@@ -684,11 +526,6 @@ public class Generator {
             Pair pair = GetNextNodeInPathIdAndPositionInArr(car.path, car.last_visited_node_id);
 
             DefaultNode nextNode = getNodeFromID(pair.x);
-
-//            point = DistanceUtils.pointOnBearingRAD(carLastVisitedNode.latitude, carLastVisitedNode.longitude,
-//                    DistanceUtils.dist2Radians(car.progress_since_last_node_in_km, 6371.0),
-//                    DistanceUtils.toRadians(bearing(carLastVisitedNode.latitude, carLastVisitedNode.longitude,
-//                            nextNode.latitude, nextNode.longitude)), new SpatialContext(false), null);
 
             Pair pair3 = CalculatePointByDistanceAndBearing(carLastVisitedNode.latitude, carLastVisitedNode.longitude,
                     car.progress_since_last_node_in_km/6371.0,
@@ -873,7 +710,6 @@ public class Generator {
 
     public static void DefineGeneration(double second) throws Exception {
         int rules_total = rules.size();
-        //System.out.println("N: " + rules_total);
 
         rules.sort(Comparator.comparing(GenerationRule::getIntensity));
         Collections.reverse(rules);

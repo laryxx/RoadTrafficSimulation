@@ -288,8 +288,16 @@ public class GenerationRulesGUI {
                 destination_select = destination_select.substring(5);
                 int resultDestinationId = Integer.parseInt(destination_select);
                 var values = new HashMap<String, Integer>() {{
-                    put("source", resultSourceId);
-                    put ("destination", resultDestinationId);
+                    try {
+                        put("source", Generator.ReturnJsonIdByNodeId(resultSourceId));
+                    } catch (Exception exception) {
+                        exception.printStackTrace();
+                    }
+                    try {
+                        put ("destination", Generator.ReturnJsonIdByNodeId(resultDestinationId));
+                    } catch (Exception exception) {
+                        exception.printStackTrace();
+                    }
                 }};
                 var objectMapper = new ObjectMapper();
                 String requestBody = "";
