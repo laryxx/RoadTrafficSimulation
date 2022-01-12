@@ -1,8 +1,7 @@
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
+
+import java.io.*;
 import java.util.*;
 import org.json.simple.*;
 
@@ -44,15 +43,18 @@ public class Generator {
 
     public static void Start(ArrayList<GenerationRule> input_rules, SimulationProperties input_properties) throws Exception {
         properties = input_properties;
-        GenerationRule rule = new GenerationRule(0.3, 0.4, 0.3, GetNodeByGraphId(3), GetNodeByGraphId(40), 5);
-        rules.add(rule);
+//        GenerationRule rule = new GenerationRule(0.3, 0.4, 0.3, GetNodeByGraphId(3), GetNodeByGraphId(40), 5);
+//        rules.add(rule);
+        rules.addAll(input_rules);
+        WriteRulesToJSON();
         System.out.println("TOTAL NUMBER OF NODES ---------" + AllNodes.size());
         StartTimer(CalculateSimulationTime(), 0);
     }
 
     public static ArrayList<DefaultNode> ProcessGenerationPoints() throws IOException, ParseException {
         //Manual part
-        Object obj = new JSONParser().parse(new FileReader("generation_points.json"));
+        //"../.data/maps/simple_map/generation_points.json"
+        Object obj = new JSONParser().parse(new FileReader("../.data/maps/Map1/anim/configs/config1.json"));
         JSONObject map = (JSONObject) obj;
         JSONArray nodes = (JSONArray) map.get("nodes");
         ArrayList<DefaultNode> gen_points = new ArrayList<>();
@@ -112,16 +114,17 @@ public class Generator {
         for(int i = 0; i<group.Nodes.size(); i++){
             if(i == group.Nodes.size()-1){
                 //TODO
-                ArrayList<OuterConnection> connections = new ArrayList<>();
-                OuterConnection connection = new OuterConnection(group.id,
-                        group.Nodes.get(0).id);
-                connections.add(connection);
-                group.Nodes.get(i).setOuter_connections(connections);
+//                ArrayList<OuterConnection> connections = new ArrayList<>();
+//                OuterConnection connection = new OuterConnection(group.id,
+//                        group.Nodes.get(0).id);
+//                connections.add(connection);
+//                group.Nodes.get(i).setOuter_connections(connections);
             }
             else {
                 group.Nodes.get(i).setConnection_id(group.Nodes.get(i + 1).id);
             }
         }
+        CaptureConnections();
     }
 
     public static void PopulateGraph(){
@@ -129,10 +132,12 @@ public class Generator {
         ArrayList<Edge> edges2 = new ArrayList<>();
         for(int i = 0; i < AllNodes.size(); i++){
             if(AllNodes.get(i) instanceof OuterNode){
-                for(int j = 0; j < AllNodes.get(i).outer_connections.size(); j++){
-                    edges2.add(new Edge(AllNodes.get(i).graph_id,
-                            Objects.requireNonNull(GetNodeById(AllNodes.get(i).outer_connections.get(j).group_connection_node_id)).graph_id,
-                            AllNodes.get(i).id, AllNodes.get(i).outer_connections.get(j).group_connection_node_id));
+                if(AllNodes.get(i).outer_connections != null) {
+                    for (int j = 0; j < AllNodes.get(i).outer_connections.size(); j++) {
+                        edges2.add(new Edge(AllNodes.get(i).graph_id,
+                                Objects.requireNonNull(GetNodeById(AllNodes.get(i).outer_connections.get(j).group_connection_node_id)).graph_id,
+                                AllNodes.get(i).id, AllNodes.get(i).outer_connections.get(j).group_connection_node_id));
+                    }
                 }
             } else if(AllNodes.get(i) instanceof InnerNode){
                 edges2.add(new Edge(AllNodes.get(i).graph_id,
@@ -140,7 +145,37 @@ public class Generator {
                         AllNodes.get(i).id, AllNodes.get(i).connection_id));
             }
         }
-        graph = new Graph(edges2, edges2.size());
+        graph = new Graph(edges2, edges2.size()+10);
+    }
+
+    public static void WriteRulesToJSON() throws Exception {
+        Object obj1 = new JSONParser().parse(new FileReader("../.data/maps/Map1/anim/configs/config1.json"));
+        JSONObject map = (JSONObject) obj1;
+        JSONArray nodes = (JSONArray) map.get("nodes");
+
+        JSONObject rules_total = new JSONObject();
+        JSONArray rules_list = new JSONArray();
+        for(int i = 0; i < rules.size(); i++){
+            JSONObject obj = new JSONObject();
+            obj.put("source", ReturnJsonIdByNodeId(rules.get(i).source_node.id));
+            obj.put("destination", ReturnJsonIdByNodeId(rules.get(i).destination_node.id));
+            obj.put("intensity", rules.get(i).intensity);
+            obj.put("trucks", rules.get(i).trucks);
+            obj.put("vans", rules.get(i).vans);
+            obj.put("sedans", rules.get(i).sedans);
+            rules_list.add(obj);
+        }
+        rules_total.put("rules", rules_list);
+        rules_total.put("nodes", nodes);
+        try (FileWriter file = new FileWriter("../.data/maps/Map1/anim/configs/config1.json")) {
+            //We can write any JSONArray or JSONObject instance to the file
+            System.out.println("WRITE RULES TO CONFIG");
+            file.write(rules_total.toJSONString());
+            file.flush();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public static void printAllNodeGroups(){
@@ -249,12 +284,13 @@ public class Generator {
         System.out.println("SIZE____" + stack_path.size());
         ArrayList<DefaultNode> real_path = new ArrayList<DefaultNode>();
         real_path = GetRealPathFromGraphPath(stack_path);
+        System.out.println("PATH SIZE: " + stack_path.size() + " AND " + real_path.size());
         String type = DecideOnCarType(rule);
         switch (type) {
             case "Truck" -> {
                 Random rand = new Random();
                 int id = rand.nextInt(1000);
-                if (IsIdUnique(id)) {
+                if (IsIdUnique(id) && real_path.size() > 1) {
                     Truck truck = new Truck(id, rule.source_node.id, rule.destination_node.id, real_path, Intent.ACCELERATE,
                             0, CalculateDistanceInKilometers(real_path.get(0).latitude, real_path.get(0).longitude,
                             real_path.get(real_path.size() - 1).latitude, real_path.get(real_path.size() - 1).longitude),
@@ -277,7 +313,7 @@ public class Generator {
             case "Van" -> {
                 Random rand = new Random();
                 int id = rand.nextInt(1000);
-                if (IsIdUnique(id)) {
+                if (IsIdUnique(id) && real_path.size() > 1) {
                     Van van = new Van(id, rule.source_node.id, rule.destination_node.id, real_path, Intent.ACCELERATE,
                             0, CalculateDistanceInKilometers(real_path.get(0).latitude, real_path.get(0).longitude,
                             real_path.get(real_path.size() - 1).latitude, real_path.get(real_path.size() - 1).longitude),
@@ -300,7 +336,7 @@ public class Generator {
             case "Sedan" -> {
                 Random rand = new Random();
                 int id = rand.nextInt(1000);
-                if (IsIdUnique(id)) {
+                if (IsIdUnique(id) && real_path.size() > 1) {
                     Sedan sedan = new Sedan(id, rule.source_node.id, rule.destination_node.id, real_path, Intent.ACCELERATE,
                             0, CalculateDistanceInKilometers(real_path.get(0).latitude, real_path.get(0).longitude,
                             real_path.get(real_path.size() - 1).latitude, real_path.get(real_path.size() - 1).longitude),
@@ -597,10 +633,11 @@ public class Generator {
     }
 
     public static void CreateNodes() throws IOException, ParseException {
+        //"../.data/maps/simple_map/simple_map.geojson"
         //Every single node where a dynamic object may appear(A highway, a road, e.t.c.)
         //And its relation is to be organised in the node structure(Node and NodeGroup objects
         //which shall all exist in memory while the code is running)
-        Object obj = new JSONParser().parse(new FileReader("simple_map.geojson"));
+        Object obj = new JSONParser().parse(new FileReader("../.data/maps/Map1/map.geojson"));
         JSONObject map = (JSONObject) obj;
 
         JSONArray features = (JSONArray) map.get("features");
@@ -783,9 +820,28 @@ public class Generator {
         frame.put("positions", positions);
         frames.add(frame);
     }
+
+    public static void CaptureConnections(){
+        for(int i = 0; i < NodeGroups.size(); i++){
+            Pair coordinates = new Pair(NodeGroups.get(i).Nodes.get(NodeGroups.get(i).Nodes.size()-1).latitude,
+                    NodeGroups.get(i).Nodes.get(NodeGroups.get(i).Nodes.size()-1).longitude);
+            ArrayList<OuterConnection> outer_conn = new ArrayList<OuterConnection>();
+            //outer_conn = NodeGroups.get(i).Nodes.get(NodeGroups.get(i).Nodes.size()-1).outer_connections;
+            //Now we check fot connections
+            for(int j = 0; j < AllNodes.size(); j++){
+                if(AllNodes.get(j) instanceof InnerNode && AllNodes.get(j).latitude == coordinates.latitude &&
+                        AllNodes.get(j).longitude == coordinates.longitude){
+                    outer_conn.add(new OuterConnection(AllNodes.get(j).group_id, AllNodes.get(j).id));
+                    System.out.println("Connection added");
+                }
+            }
+            NodeGroups.get(i).Nodes.get(NodeGroups.get(i).Nodes.size()-1).setOuter_connections(outer_conn);
+        }
+    }
     
 
     public static void SaveJSON(){
+        //"../.data/maps/simple_map/anim/frames.json"
         JSONObject total = new JSONObject();
         total.put("framerate", 10);
         JSONArray types = new JSONArray();
@@ -800,7 +856,7 @@ public class Generator {
         types.add(type3);
         total.put("types", types);
         total.put("frames", frames);
-        try (FileWriter file = new FileWriter("new_frames.json")) {
+        try (FileWriter file = new FileWriter("../.data/maps/Map1/anim/out/frames.json")) {
             //We can write any JSONArray or JSONObject instance to the file
             System.out.println("Write");
             file.write(total.toJSONString());

@@ -1,0 +1,14 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="Team Project:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/Team_Project_jar</output-path>
+    <root id="archive" name="Team Project.jar">
+      <element id="module-output" name="Team Project" />
+      <element id="extracted-dir" path="$USER_HOME$/Downloads/json-simple-1.1.1.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$USER_HOME$/Downloads/jar_files (2)/jackson-annotations-2.13.0-rc1.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$USER_HOME$/Downloads/jar_files (2)/jackson-core-2.13.0-rc1.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$USER_HOME$/Downloads/jar_files (2)/jackson-databind-2.13.0-rc1.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$USER_HOME$/Downloads/jar_files (1)/spatial4j-0.8.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$USER_HOME$/Downloads/gson-2.8.2.jar" path-in-jar="/" />
+    </root>
+  </artifact>
+</component>
