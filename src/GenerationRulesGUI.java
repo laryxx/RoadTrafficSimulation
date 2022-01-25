@@ -271,6 +271,7 @@ public class GenerationRulesGUI {
     }
 
     private class ButtonClickListener implements ActionListener {
+        //https://httpbin.org/post
         public void actionPerformed(ActionEvent e) {
             String command = e.getActionCommand();
             if (command.equals("         Start         ")) {
@@ -311,7 +312,7 @@ public class GenerationRulesGUI {
                 assert requestBody != null;
                 //Change to localhost
                 HttpRequest request = HttpRequest.newBuilder()
-                        .uri(URI.create("https://httpbin.org/post"))
+                        .uri(URI.create("https://localhost:1212/post"))
                         .POST(HttpRequest.BodyPublishers.ofString(requestBody))
                         .build();
 

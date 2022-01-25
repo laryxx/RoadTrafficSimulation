@@ -134,7 +134,7 @@ public class ViewRulesGUI {
                 assert requestBody != null;
                 //Change to localhost
                 HttpRequest request = HttpRequest.newBuilder()
-                        .uri(URI.create("https://httpbin.org/post"))
+                        .uri(URI.create("https://localhost:1212/post"))
                         .POST(HttpRequest.BodyPublishers.ofString(requestBody))
                         .build();
 

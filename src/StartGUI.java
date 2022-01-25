@@ -173,7 +173,20 @@ public class StartGUI {
                     LocalTime EndTime = LocalTime.of((int)end_hour.getValue(), (int)end_minute.getValue(),
                             0, 0);
                     SimulationProperties properties = new SimulationProperties(StartTime, EndTime, 10);
-                    Generator.Start(rules, properties);
+                    if(rules.size() > 0) {
+                        Generator.Start(rules, properties);
+                    }
+                    else{
+                        Generator.main(new String[]{});
+                    }
+                    try {
+                        ProcessBuilder processBuilder = new ProcessBuilder("../run_visualization.bat").inheritIO();
+                        Process process = processBuilder.start();
+                        process.waitFor();
+                    } catch (InterruptedException e1) {
+                        e1.printStackTrace();
+                    }
+                    System.exit(0);
                 } catch (Exception exception) {
                     exception.printStackTrace();
                 }

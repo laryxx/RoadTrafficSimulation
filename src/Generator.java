@@ -54,7 +54,7 @@ public class Generator {
     public static ArrayList<DefaultNode> ProcessGenerationPoints() throws IOException, ParseException {
         //Manual part
         //"../.data/maps/simple_map/generation_points.json"
-        Object obj = new JSONParser().parse(new FileReader("../.data/maps/Map1/anim/configs/config1.json"));
+        Object obj = new JSONParser().parse(new FileReader("../.data/maps/test_map/anim/configs/config1.json"));
         JSONObject map = (JSONObject) obj;
         JSONArray nodes = (JSONArray) map.get("nodes");
         ArrayList<DefaultNode> gen_points = new ArrayList<>();
@@ -149,7 +149,7 @@ public class Generator {
     }
 
     public static void WriteRulesToJSON() throws Exception {
-        Object obj1 = new JSONParser().parse(new FileReader("../.data/maps/Map1/anim/configs/config1.json"));
+        Object obj1 = new JSONParser().parse(new FileReader("../.data/maps/test_map/anim/configs/config1.json"));
         JSONObject map = (JSONObject) obj1;
         JSONArray nodes = (JSONArray) map.get("nodes");
 
@@ -167,7 +167,7 @@ public class Generator {
         }
         rules_total.put("rules", rules_list);
         rules_total.put("nodes", nodes);
-        try (FileWriter file = new FileWriter("../.data/maps/Map1/anim/configs/config1.json")) {
+        try (FileWriter file = new FileWriter("../.data/maps/test_map/anim/configs/config1.json")) {
             //We can write any JSONArray or JSONObject instance to the file
             System.out.println("WRITE RULES TO CONFIG");
             file.write(rules_total.toJSONString());
@@ -637,7 +637,7 @@ public class Generator {
         //Every single node where a dynamic object may appear(A highway, a road, e.t.c.)
         //And its relation is to be organised in the node structure(Node and NodeGroup objects
         //which shall all exist in memory while the code is running)
-        Object obj = new JSONParser().parse(new FileReader("../.data/maps/Map1/map.geojson"));
+        Object obj = new JSONParser().parse(new FileReader("../.data/maps/test_map/schema.geojson"));
         JSONObject map = (JSONObject) obj;
 
         JSONArray features = (JSONArray) map.get("features");
@@ -856,7 +856,7 @@ public class Generator {
         types.add(type3);
         total.put("types", types);
         total.put("frames", frames);
-        try (FileWriter file = new FileWriter("../.data/maps/Map1/anim/out/frames.json")) {
+        try (FileWriter file = new FileWriter("../.data/maps/test_map/anim/out/frames.json")) {
             //We can write any JSONArray or JSONObject instance to the file
             System.out.println("Write");
             file.write(total.toJSONString());
