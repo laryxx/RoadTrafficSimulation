@@ -30,7 +30,7 @@ public class NodeGroup {
     }
 
     public void setNodes(ArrayList<DefaultNode> nodes) {
-        Nodes = nodes;
+        this.Nodes = nodes;
     }
 
     public ArrayList<DefaultNode> getNodes(){

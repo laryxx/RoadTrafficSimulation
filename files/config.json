@@ -1,0 +1,46 @@
+{
+    "data": {
+        "identifiers": {
+            "name": "Settings1",
+            "hash": "a93785329bc68ba9d95f62543a5622668e4dc731443ab446b80a4e1590e2da0a"
+        },
+        "simulation_settings": {
+            "daytime": "Day",
+            "bottom_left_lat": 51.89808082980923,
+            "bottom_left_long": 17.574707470703117,
+            "top_right_lat": 52.00282497927585,
+            "top_right_long": 17.801300488281242,
+            "duration": 65
+        },
+        "generation_rules": [
+            {
+                "name": "Point 1",
+                "start_lat": 51.928186,
+                "start_long": 17.66451,
+                "end_lat": 51.976163,
+                "end_long": 17.69107,
+                "vans": true,
+                "trucks": true,
+                "sedans": true,
+                "intensity": 3,
+                "hash_id": "0d08b746ddaca49f8de628e321bf716e25bb724d638bf78675326443ab795001",
+                "start_group_id": "42340951",
+                "end_group_id": "317928187"
+            },
+            {
+                "name": "Point 2",
+                "start_lat": 51.967728,
+                "start_long": 17.639301,
+                "end_lat": 51.933799,
+                "end_long": 17.70448,
+                "vans": true,
+                "trucks": true,
+                "sedans": true,
+                "intensity": 3,
+                "hash_id": "a4d720efedad1fd88907704ef72abdc1f5c3c39452ac29d83673210dbfe0b21e",
+                "start_group_id": "322239974",
+                "end_group_id": "141148605"
+            }
+        ]
+    }
+}

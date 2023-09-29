@@ -1,0 +1,334 @@
+#: import MapView kivy.garden.mapview.MapView
+<CustomSlider@Slider>:
+    size_hint: None, None
+    size: 10, 3
+
+<MySpinnerOption@SpinnerOption>:
+    height: 34   # set the height of the Spinner options
+
+<MySpinnerOption2@SpinnerOption>:
+    height: 20   # set the height of the Spinner options
+    font_size: 12
+
+<FirstBoxLayout@BoxLayout>
+    canvas.before:
+        Color:
+            rgba: (150/255, 150/255, 150/255, 1)
+        Rectangle:
+            size: self.size
+            pos: self.pos
+
+<SecondBoxLayout@BoxLayout>
+    canvas.before:
+        Color:
+            rgba: (150/255, 150/255, 150/255, 1)
+        Rectangle:
+            size: self.size
+            pos: self.pos
+    pos_hint: {"center_y": 0.5}
+
+<MyLayout>
+    slider_simulation_duration_text: simulation_settings_duration_label
+    slider_cars_per_epoch_text: new_source_point_cars_per_epoch_slider_label
+
+    FloatLayout:
+        size: root.width, root.height
+
+        FirstBoxLayout:
+            orientation: "vertical"
+            size: root.width/4, root.height*0.75
+            size_hint:(0.25, 0.75)
+            spacing: 10
+            padding: 5
+
+            Label:
+                size_hint: (1, 0.01)
+                text: "================|||||||||||||||||||||||================"
+
+            Label:
+                text: "View source points:"
+                size_hint: (1, 0.1)
+                color: (0.2, 0.2, 0.2, 1)
+                bold: True
+
+            Spinner:
+                id: select_defined_point_spinner
+                font_size: 12
+                text: "Select Point"
+                size_hint: (1, 0.12)
+                values: root.spinner_options
+                option_cls: 'MySpinnerOption2'
+
+            GridLayout:
+                cols:2
+                rows:2
+                size_hint: (1, 0.2)
+                spacing: 5
+
+                BlueButton
+                    id: show_defined_point_on_map_button
+                    text: "Show on map"
+                    size_hint: (0.1, 0.1)
+                    font_size: 12
+                    bold: True
+                    on_press: root.show_selected_generation_rule_on_map()
+
+                RedButton
+                    id: remove_defined_point_button
+                    text: "Remove"
+                    size_hint: (0.1, 0.1)
+                    font_size: 12
+                    bold: True
+                    on_press: root.remove_point_button_clicked()
+
+            Label:
+                size_hint: (1, 0.1)
+                text: "================|||||||||||||||||||||||================"
+
+            Label:
+                text: "Add new generation point:"
+                size_hint: (1, 0.1)
+                color: (0.2, 0.2, 0.2, 1)
+                bold: True
+
+            TextInput:
+                id: new_source_point_name_text_input
+                text: "Point 1"
+                size_hint: (1, 0.2)
+                multiline: False
+                font_size: 14
+
+            GridLayout:
+                cols: 2
+                rows: 10
+
+                Label:
+                    text: "Vans"
+                    size_hint: (0.5, 0.2)
+                    font_size: 14
+
+                CheckBox:
+                    id: new_source_point_vans_checkbox
+                    on_active: root.click_vans(self, self.active)
+                    size_hint: (0.5, 0.2)
+                    color: (0, 0, 0, 1)
+
+                Label:
+                    text: "Trucks"
+                    size_hint: (0.5, 0.2)
+                    font_size: 14
+
+                CheckBox:
+                    id: new_source_point_trucks_checkbox
+                    on_active: root.click_trucks(self, self.active)
+                    size_hint: (0.5, 0.2)
+                    color: (0, 0, 0, 1)
+
+                Label:
+                    text: "Sedans"
+                    size_hint: (0.5, 0.2)
+                    font_size: 14
+
+                CheckBox:
+                    id: new_source_point_sedans_checkbox
+                    on_active: root.click_sedans(self, self.active)
+                    size_hint: (0.5, 0.2)
+                    color: (0, 0, 0, 1)
+
+                Label:
+                    id: new_source_point_lat
+                    text: "Lat: 56.00342"
+                    font_size: 12
+                    size_hint: (1, 0.1)
+                    color: (0.2, 0.2, 0.2, 1)
+
+                Label:
+                    id: new_source_point_long
+                    text: "Long: 17.86034"
+                    font_size: 12
+                    size_hint: (1, 0.1)
+                    color: (0.2, 0.2, 0.2, 1)
+
+            Label:
+                id: new_source_point_cars_per_epoch_slider_label
+                text: "Cars per epoch: 1"
+                font_size: 14
+                bold: True
+                size_hint: (1, 0.1)
+                color: (0.2, 0.2, 0.2, 1)
+
+            CustomSlider:
+                id: new_source_point_cars_per_epoch_slider
+                min: 1
+                max: 5
+                size_hint: (1, 0.1)
+                step: 1
+                orientation: "horizontal"
+                on_value: root.slider_new_source_point_cars_per_epoch_triggered(*args)
+
+            BlueButton
+                id: add_new_point_button
+                text: "Add rule"
+                active: "False"
+                on_press: root.add_point_button_clicked()
+                size_hint: (1, 0.2)
+
+        SecondBoxLayout:
+            orientation: "horizontal"
+            size_hint: (1, 0.25)
+            pos_hint: {"x": 0, "top": 1}
+            spacing: 20
+            padding: 5
+
+            GridLayout:
+                cols: 2
+                spacing: 10
+
+                Spinner:
+                    id: simulation_settings_daytime_spinner
+                    text: "Select Daytime"
+                    size_hint: (0.1, 0.1)
+                    values: ["Morning", "Day", "Night"]
+                    option_cls: 'MySpinnerOption'
+
+                Label:
+                    text: "Simulation length is"
+                    size_hint: (0.5, 0.1)
+                    color: (0.2, 0.2, 0.2, 1)
+
+                Label:
+                    text: ""
+                    size_hint: (0.5, 0.1)
+                    color: (0.2, 0.2, 0.2, 1)
+
+                Label:
+                    id: simulation_settings_duration_label
+                    bold: True
+                    font_size:18
+                    text: "10 minutes"
+                    size_hint: (0.5, 0.1)
+                    color: (0.2, 0.2, 0.2, 1)
+
+                Label:
+                    text: ""
+                    size_hint: (0.5, 0.1)
+                    color: (0.2, 0.2, 0.2, 1)
+
+                Slider:
+                    id: simulation_settings_duration_slider
+                    min: 10
+                    max: 120
+                    size_hint: (0.5, 0.1)
+                    step: 1
+                    orientation: "horizontal"
+                    on_value: root.slider_simulation_settings_duration_triggered(*args)
+
+            GreenRoundedButton
+                id: simulation_start_button
+                text: "Start"
+                size_hint: (0.3, 0.3)
+                pos_hint: {"center_y": 0.5}
+                on_press: root.start_button_clicked()
+
+            GridLayout:
+                cols:2
+                rows:4
+                size_hint:(1, 1)
+
+                Label:
+                    text: "Select a different region"
+                    color: (0.2, 0.2, 0.2, 1)
+                    size_hint: (0.9, 0.1)
+
+                Label:
+                    text: "  (by coordinates)"
+                    color: (0.2, 0.2, 0.2, 1)
+                    size_hint: (0.1, 0.1)
+
+                Label:
+                    text: "latitude"
+                    color: (0.2, 0.2, 0.2, 1)
+                    size_hint: (0.3, 0.1)
+
+                TextInput:
+                    id: map_new_center_on_coordinates_latitude
+                    multiline: False
+                    size_hint: (1, 0.1)
+
+                Label:
+                    text: "longitude"
+                    color: (0.2, 0.2, 0.2, 1)
+                    size_hint: (0.3, 0.1)
+
+                TextInput:
+                    id: map_new_center_on_coordinates_longitude
+                    multiline: False
+                    size_hint: (1, 0.1)
+
+                Button:
+                    id: restart_ui_button
+                    text: "Restart UI"
+                    size_hint: (1, 0.1)
+                    on_press: root.restart_ui()
+
+                Button:
+                    id: fill_current_center_on_coordinates_coordinates
+                    text: "Fill current"
+                    size_hint: (1, 0.1)
+                    on_press: root.fill_coordinates()
+
+        CustomMapView:
+            id: mapview
+            zoom: 12
+            lat: 57.0399
+            lon: 2.8071
+            size_hint: (0.75, 0.75)
+            pos_hint: {"x": 0.25}
+
+
+
+<BlueRoundedButton@Button>
+    background_color: (0, 0, 0, 0)
+    background_normal: ""
+    canvas.before:
+        Color:
+            rgba: (48/255, 84/255, 150/255, 1)
+        RoundedRectangle:
+            size: self.size
+            pos: self.pos
+            radius: [20]
+
+<BlueButton@Button>
+    background_color: (0, 0, 0, 0)
+    background_normal: ""
+
+    canvas.before:
+        Color:
+            rgba: (48/255, 84/255, 150/255, 1)
+        RoundedRectangle:
+            size: self.size
+            pos: self.pos
+            radius: [10]
+
+<RedButton@Button>
+    background_color: (0, 0, 0, 0)
+    background_normal: ""
+
+    canvas.before:
+        Color:
+            rgba: (177/255, 56/255, 9/255, 1)
+        RoundedRectangle:
+            size: self.size
+            pos: self.pos
+            radius: [10]
+
+<GreenRoundedButton@Button>
+    background_color: (0, 0, 0, 0)
+    background_normal: ""
+    canvas.before:
+        Color:
+            rgba: (48/255, 164/255, 50/255, 1)
+        RoundedRectangle:
+            size: self.size
+            pos: self.pos
+            radius: [20]

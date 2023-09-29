@@ -1,3 +1,5 @@
+import java.util.ArrayList;
+
 public class OuterConnection {
     String group_connection_id;
     int group_connection_node_id;
@@ -26,4 +28,5 @@ public class OuterConnection {
     public int getGroup_connection_node_id(){
         return group_connection_node_id;
     }
+
 }

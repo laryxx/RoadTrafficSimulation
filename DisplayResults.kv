@@ -1,0 +1,79 @@
+<SecondBoxLayout@BoxLayout>
+    canvas.before:
+        Color:
+            rgba: (150/255, 150/255, 150/255, 1)
+        Rectangle:
+            size: self.size
+            pos: self.pos
+    pos_hint: {"center_y": 0.5}
+
+<MyLayout>
+    FloatLayout:
+        size: root.width, root.height
+
+        SecondBoxLayout:
+            orientation: "horizontal"
+            size_hint: (1, 0.25)
+            pos_hint: {"x": 0, "top": 1}
+            spacing: 20
+            padding: 5
+
+            BlueButton
+                id: previous_frame_button
+                text: "Go 100 frames back"
+                size_hint: (0.1, 0.3)
+                font_size: 12
+                bold: True
+                on_press: app.root.ids.mapview.show_previous_frame_data()
+
+            GridLayout:
+                cols:1
+                rows:3
+                size_hint: (0.1, 1)
+                spacing: 5
+
+                Label:
+                    size_hint: (0.2, 0.05)
+                    text: "Go to frame"
+
+                TextInput:
+                    id: frame_number_text_input
+                    text: "50"
+                    size_hint: (0.2, 0.05)
+                    multiline: False
+                    font_size: 14
+
+                BlueButton
+                    id: show_on_map_button
+                    text: "Show on map"
+                    size_hint: (0.2, 0.05)
+                    font_size: 12
+                    bold: True
+                    on_press: app.root.ids.mapview.show_frame_data()
+
+            BlueButton
+                id: next_frame_button
+                text: "Go 100 frames forward"
+                size_hint: (0.1, 0.3)
+                font_size: 12
+                bold: True
+                on_press: app.root.ids.mapview.show_next_frame_data()
+
+        CustomMapView:
+            id: mapview
+            zoom: 12
+            lat: 57.0399
+            lon: 2.8071
+            size_hint: (1, 0.75)
+
+<BlueButton@Button>
+    background_color: (0, 0, 0, 0)
+    background_normal: ""
+
+    canvas.before:
+        Color:
+            rgba: (48/255, 84/255, 150/255, 1)
+        RoundedRectangle:
+            size: self.size
+            pos: self.pos
+            radius: [10]

@@ -1,3 +1,5 @@
+import java.util.ArrayList;
+
 public class Pair {
     int x;
     int y;
@@ -5,6 +7,12 @@ public class Pair {
     int b;
     double latitude;
     double longitude;
+    DefaultNode node1;
+    DefaultNode node2;
+    String hash;
+    double chance;
+    int id;
+    double mark;
 
     public Pair(){
 
@@ -24,4 +32,21 @@ public class Pair {
         this.latitude = latitude;
         this.longitude = longitude;
     }
+
+    public Pair(DefaultNode node1, DefaultNode node2){
+        this.node1 = node1;
+        this.node2 = node2;
+    }
+
+    public Pair(String hash, double chance){
+        this.hash = hash;
+        this.chance = chance;
+    }
+
+    public Pair(int id, double mark){
+        this.id = id;
+        this.mark = mark;
+    }
 }
+
+

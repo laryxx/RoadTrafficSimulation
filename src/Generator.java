@@ -1,230 +1,224 @@
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
-
 import java.io.*;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.zip.CRC32;
 import org.json.simple.*;
 
-
 public class Generator {
-
     public static ArrayList<Vehicle> Cars = new ArrayList<>();
     public static ArrayList<NodeGroup> NodeGroups = new ArrayList<>();
     public static ArrayList<DefaultNode> AllNodes = new ArrayList<>();
     public static ArrayList<GenerationRule> rules = new ArrayList<GenerationRule>();
     public static JSONArray frames = new JSONArray();
     public static JSONArray cars = new JSONArray();
-    public static Graph graph = new Graph();
     public static HashSet<Integer> vehicle_ids = new HashSet<Integer>();
     public static HashSet<Integer> node_ids = new HashSet<>();
     public static HashSet<Integer> node_graph_ids = new HashSet<>();
     public static SimulationProperties properties = new SimulationProperties();
-    public static ArrayList<Pair> gen_points_data = new ArrayList<Pair>();
+    public static int num = 0;
+    public static ArrayList<ArrayList<DefaultNode>> connectorNodeGroups = new ArrayList<>();
+    public static ArrayList<Triplet> coordinatePairs = new ArrayList<>();
+
+    public static ArrayList<Pair> coordinateUniqueCRCList = new ArrayList<>();
+
+    public static ArrayList<Pair> OuterNodeIds = new ArrayList<>();
+
+    public static double epochProgress = 0.0;
+
+    public static int currentEpochTimer = 0;
+
+    public static double epochProgressStep = 15.0;
+
+    public static double totalIntensity = 0.0;
+
+    public static ArrayList<String> randomizingList = new ArrayList<>();
 
     public static void main(String[] args) throws Exception {
 
         CreateNodes();
-        PopulateGraph();
-        printAllNodeGroups();
 
-        ArrayList<DefaultNode> generation_points = new ArrayList<>();
-        generation_points = ProcessGenerationPoints();
+        ConfigurationData configurationData = readConfig();
+        createRandomizingList(configurationData);
+        System.out.println(configurationData.toString());
 
-        for(int i = 0; i < generation_points.size(); i++){
-            System.out.println(generation_points.get(i).id);
-        }
+        printMapInfo();
 
-        System.out.println("GEN Points size: " + generation_points.size());
+        processGenerationRulesData(configurationData);
 
-        GenerationRulesGUI main = new GenerationRulesGUI(generation_points);
-        main.showEvent();
-
+        StartTimer(configurationData, 0);
     }
 
-    public static void Start(ArrayList<GenerationRule> input_rules, SimulationProperties input_properties) throws Exception {
-        properties = input_properties;
-//        GenerationRule rule = new GenerationRule(0.3, 0.4, 0.3, GetNodeByGraphId(3), GetNodeByGraphId(40), 5);
-//        rules.add(rule);
-        rules.addAll(input_rules);
-        WriteRulesToJSON();
-        System.out.println("TOTAL NUMBER OF NODES ---------" + AllNodes.size());
-        StartTimer(CalculateSimulationTime(), 0);
-    }
-
-    public static ArrayList<DefaultNode> ProcessGenerationPoints() throws IOException, ParseException {
-        //Manual part
-        //"../.data/maps/simple_map/generation_points.json"
-        Object obj = new JSONParser().parse(new FileReader("../.data/maps/test_map/anim/configs/config1.json"));
-        JSONObject map = (JSONObject) obj;
-        JSONArray nodes = (JSONArray) map.get("nodes");
-        ArrayList<DefaultNode> gen_points = new ArrayList<>();
-        System.out.println(nodes.size());
-        for(int i = 0; i < nodes.size(); i++) {
-            JSONObject object = (JSONObject) nodes.get(i);
-            String id = (String) object.get("id");
-            String group_id = (String) object.get("group");
-            int index = Integer.parseInt((String)object.get("index"));
-            DefaultNode node = FindNodeByGroupAndIndex(group_id, index);
-            assert node != null;
-            Pair gen_id_and_node_id = new Pair(Integer.parseInt(id), node.id);
-            gen_points_data.add(gen_id_and_node_id);
-            gen_points.add(node);
-        }
-        return gen_points;
-    }
-
-    public static DefaultNode FindNodeByGroupAndIndex(String group_id, int index){
-        for(int i = 0; i < NodeGroups.size(); i++){
-            if(group_id.equals(NodeGroups.get(i).id)){
-                System.out.println("-----GROUP FOUND");
-                for(int j = 0; i < NodeGroups.get(i).Nodes.size(); j++){
-                    if(j == index){
-                        return NodeGroups.get(i).Nodes.get(j);
-                    }
+    //This method prints all existing nodes
+    public static void printAllNodes(){
+        for (DefaultNode allNode : AllNodes) {
+            System.out.println("Latitude: " + allNode.latitude);
+            System.out.println("Longitude : " + allNode.longitude);
+            if (allNode instanceof InnerNode) {
+                System.out.println("InnerNode");
+                if (allNode.connections.size() == 0) {
+                    System.out.println("0 Connection Inner node found");
                 }
-            }
-        }
-        return null;
-    }
-
-    public static int ReturnJsonIdByNodeId(int node_id) throws Exception {
-        for(int i = 0; i < gen_points_data.size(); i++){
-            if(gen_points_data.get(i).y == node_id){
-                return gen_points_data.get(i).x;
-            }
-        }
-        throw new Exception("Error finding generation point");
-    }
-
-    public static int CalculateSimulationTime(){
-        return (properties.end_time.getHour()*3600 + properties.end_time.getMinute()*60) -
-                (properties.start_time.getHour()*3600 + properties.start_time.getMinute()*60);
-    }
-
-    public static DefaultNode GetNodeByGraphId(int id){
-        for(int i = 0; i < AllNodes.size(); i++){
-            if(AllNodes.get(i).graph_id == id){
-                return AllNodes.get(i);
-            }
-        }
-        return null;
-    }
-
-    public static void NavigateNodeGroup(NodeGroup group){
-        for(int i = 0; i<group.Nodes.size(); i++){
-            if(i == group.Nodes.size()-1){
-                //TODO
-//                ArrayList<OuterConnection> connections = new ArrayList<>();
-//                OuterConnection connection = new OuterConnection(group.id,
-//                        group.Nodes.get(0).id);
-//                connections.add(connection);
-//                group.Nodes.get(i).setOuter_connections(connections);
-            }
-            else {
-                group.Nodes.get(i).setConnection_id(group.Nodes.get(i + 1).id);
-            }
-        }
-        CaptureConnections();
-    }
-
-    public static void PopulateGraph(){
-        //TODO
-        ArrayList<Edge> edges2 = new ArrayList<>();
-        for(int i = 0; i < AllNodes.size(); i++){
-            if(AllNodes.get(i) instanceof OuterNode){
-                if(AllNodes.get(i).outer_connections != null) {
-                    for (int j = 0; j < AllNodes.get(i).outer_connections.size(); j++) {
-                        edges2.add(new Edge(AllNodes.get(i).graph_id,
-                                Objects.requireNonNull(GetNodeById(AllNodes.get(i).outer_connections.get(j).group_connection_node_id)).graph_id,
-                                AllNodes.get(i).id, AllNodes.get(i).outer_connections.get(j).group_connection_node_id));
-                    }
+                System.out.println("Number of connections (Inner node): " + allNode.connections.size());
+            } else {
+                System.out.println("OuterNode");
+                if (allNode.connections.size() == 0) {
+                    System.out.println("0 Connection Outer node found");
                 }
-            } else if(AllNodes.get(i) instanceof InnerNode){
-                edges2.add(new Edge(AllNodes.get(i).graph_id,
-                        Objects.requireNonNull(GetNodeById(AllNodes.get(i).connection_id)).graph_id,
-                        AllNodes.get(i).id, AllNodes.get(i).connection_id));
+                int numberOfConnections = allNode.connections.size() + allNode.outer_connections.size();
+                System.out.println("Number of connections (Outer node): " + numberOfConnections);
             }
         }
-        graph = new Graph(edges2, edges2.size()+10);
     }
 
-    public static void WriteRulesToJSON() throws Exception {
-        Object obj1 = new JSONParser().parse(new FileReader("../.data/maps/test_map/anim/configs/config1.json"));
-        JSONObject map = (JSONObject) obj1;
-        JSONArray nodes = (JSONArray) map.get("nodes");
+    //This method prints general imported map info
+    public static void printMapInfo(){
+        System.out.println("Map setting complete.\n");
+        System.out.println("Total number of nodes: " + AllNodes.size());
+        System.out.println("Total number of connector nodes: " + getNumberOfOuterNodes());
+        System.out.println("Total number of non-connector nodes: " + getNumberOfInnerNodes());
+    }
 
-        JSONObject rules_total = new JSONObject();
-        JSONArray rules_list = new JSONArray();
-        for(int i = 0; i < rules.size(); i++){
-            JSONObject obj = new JSONObject();
-            obj.put("source", ReturnJsonIdByNodeId(rules.get(i).source_node.id));
-            obj.put("destination", ReturnJsonIdByNodeId(rules.get(i).destination_node.id));
-            obj.put("intensity", rules.get(i).intensity);
-            obj.put("trucks", rules.get(i).trucks);
-            obj.put("vans", rules.get(i).vans);
-            obj.put("sedans", rules.get(i).sedans);
-            rules_list.add(obj);
+    //This method returns the number of found outer/connector nodes
+    public static int getNumberOfOuterNodes(){
+        int number = 0;
+        for (DefaultNode allNode : AllNodes) {
+            if (allNode instanceof OuterNode) {
+                number++;
+            }
         }
-        rules_total.put("rules", rules_list);
-        rules_total.put("nodes", nodes);
-        try (FileWriter file = new FileWriter("../.data/maps/test_map/anim/configs/config1.json")) {
-            //We can write any JSONArray or JSONObject instance to the file
-            System.out.println("WRITE RULES TO CONFIG");
-            file.write(rules_total.toJSONString());
-            file.flush();
+        return number;
+    }
 
-        } catch (IOException e) {
+    //This method returns the number of found inner/non-connector nodes
+    public static int getNumberOfInnerNodes(){
+        int number = 0;
+        for (DefaultNode allNode : AllNodes) {
+            if (allNode instanceof InnerNode) {
+                number++;
+            }
+        }
+        return number;
+    }
+
+    //This method check uniqueness of a vehicle id
+    public static boolean IsIdUnique(int id){
+        return !vehicle_ids.contains(id);
+    }
+
+    //This method check uniqueness of a node id
+    public static boolean IsNodeIdUnique(int id){
+        return !node_ids.contains(id);
+    }
+
+
+
+    //This method calculates "total intensity" from the multitude of generation rules defined by the user
+    //It is later used when deciding on generation point for a car
+    public static void processGenerationRulesData(ConfigurationData configurationData){
+        for(int i = 0; i < configurationData.generationRules.size(); i++){
+            totalIntensity = totalIntensity + configurationData.generationRules.get(i).intensity;
+        }
+    }
+
+    //This method creates a list which will be used to randomly select a generation rule to execute
+    public static void createRandomizingList(ConfigurationData configurationData){
+        for(int i = 0; i < configurationData.generationRules.size(); i++){
+            for(int j = 0; j <= configurationData.generationRules.get(i).intensity; j++){
+                randomizingList.add(configurationData.generationRules.get(i).hash_id);
+            }
+        }
+    }
+
+    //This method reads the file created by module 1 which stores user-defined settings for the generation
+    public static ConfigurationData readConfig() {
+        try{
+            Object object = new JSONParser().parse(new FileReader("files\\config.json"));
+            JSONObject map = (JSONObject) object;
+            JSONObject data = (JSONObject) map.get("data");
+
+            //Identifiers
+            JSONObject identifiers = (JSONObject) data.get("identifiers");
+            String identifiers_name = (String) identifiers.get("name");
+            String identifiers_hash = (String) identifiers.get("hash");
+
+            //Simulation settings
+            JSONObject simulation_settings = (JSONObject) data.get("simulation_settings");
+            String simulation_settings_daytime = (String) simulation_settings.get("daytime");
+            double simulation_settings_bottom_left_lat = (double) simulation_settings.get("bottom_left_lat");
+            double simulation_settings_bottom_left_long = (double) simulation_settings.get("bottom_left_long");
+            double simulation_settings_top_right_lat = (double) simulation_settings.get("top_right_lat");
+            double simulation_settings_top_right_long = (double) simulation_settings.get("top_right_long");
+            long duration = (long) simulation_settings.get("duration");
+
+            //Generation rules
+            JSONArray generationRules = (JSONArray) data.get("generation_rules");
+            ArrayList<GenerationRule> generationRules1 = new ArrayList<>();
+            for (Object rule : generationRules) {
+                JSONObject generation_rule = (JSONObject) rule;
+                String generation_rule_name = (String) generation_rule.get("name");
+                double generation_rule_start_latitude = (double) generation_rule.get("start_lat");
+                double generation_rule_start_longitude = (double) generation_rule.get("start_long");
+                double generation_rule_end_latitude = (double) generation_rule.get("end_lat");
+                double generation_rule_end_longitude = (double) generation_rule.get("end_long");
+                boolean vans = (boolean) generation_rule.get("vans");
+                boolean trucks = (boolean) generation_rule.get("trucks");
+                boolean sedans = (boolean) generation_rule.get("sedans");
+                long intensity1 = (long) generation_rule.get("intensity");
+                int intensity = Math.toIntExact(intensity1);
+                String hash_id = (String) generation_rule.get("hash_id");
+                String startGroupId1 = (String) generation_rule.get("start_group_id");
+                int startGroupId = Integer.parseInt(startGroupId1);
+                String endGroupId1 = (String) generation_rule.get("end_group_id");
+                int endGroupId = Integer.parseInt(endGroupId1);
+                GenerationRule generationRule = new GenerationRule(generation_rule_name, generation_rule_start_latitude,
+                        generation_rule_start_longitude, generation_rule_end_latitude, generation_rule_end_longitude,
+                        vans, trucks, sedans, intensity, hash_id, startGroupId, endGroupId);
+                generationRules1.add(generationRule);
+            }
+
+            return new ConfigurationData(identifiers_name, identifiers_hash,
+                    simulation_settings_daytime, simulation_settings_bottom_left_lat,
+                    simulation_settings_bottom_left_long, simulation_settings_top_right_lat,
+                    simulation_settings_top_right_long, duration, generationRules1);
+
+        }
+        catch (IOException | ParseException e) {
             e.printStackTrace();
         }
+        return new ConfigurationData();
     }
 
-    public static void printAllNodeGroups(){
-        System.out.println("TOTAL " + NodeGroups.size() + " NODEGROUPS");
-        for(int i = 0; i < NodeGroups.size(); i++){
-            NodeGroup group = NodeGroups.get(i);
-            System.out.println("NODE GROUP ID: " + group.id);
-            System.out.println("NUMBER OF NODES: " + group.Nodes.size());
-            System.out.println("NODE GROUP TYPE: " + group.type);
-        }
-        printAllNodesInNodeGroup(NodeGroups.get(NodeGroups.size()-1));
-        printAllNodesInNodeGroup(NodeGroups.get(NodeGroups.size()-2));
-    }
-
-    public static void printAllNodesInNodeGroup(NodeGroup group){
+    //This nodes navigates/assigns connections inside a single node group, assuming every street is two-way
+    //TODO - must be modified when implementing two-way/one-way streets
+    public static void NavigateNodeGroup(NodeGroup group){
         for(int i = 0; i < group.Nodes.size(); i++){
-            System.out.println("Node " + i + "id: " + group.Nodes.get(i).id);
-            System.out.println("Type: " + group.Nodes.get(i).toString());
-            System.out.println("Latitude: " + group.Nodes.get(i).latitude + "Longitude: " + group.Nodes.get(i).longitude);
-            if(i < group.Nodes.size()-1) {
-                System.out.println("Next node id: " + group.Nodes.get(i).connection_id);
-                System.out.println("Distance to next: " + CalculateDistanceInKilometers(group.Nodes.get(i).latitude,
-                        group.Nodes.get(i).longitude, group.Nodes.get(i + 1).latitude, group.Nodes.get(i + 1).longitude) * 100 + "Meters");
+            if(i == group.Nodes.size()-1){
+                //For last node in group
+                ArrayList<Integer> connections = new ArrayList<>();
+                connections.add(group.Nodes.get(i - 1).id);
+                group.Nodes.get(i).setConnections(connections);
+            }
+            else if(i == 0){
+                //For first node in group
+                ArrayList<Integer> connections = new ArrayList<>();
+                connections.add(group.Nodes.get(i + 1).id);
+                group.Nodes.get(i).setConnections(connections);
+            }
+            else {
+                //For all nodes in-between
+                ArrayList<Integer> connections = new ArrayList<>();
+                connections.add(group.Nodes.get(i + 1).id);
+                connections.add(group.Nodes.get(i - 1).id);
+                group.Nodes.get(i).setConnections(connections);
             }
         }
     }
 
-    public static void saveRules(ArrayList<GenerationRule> rules1){
-        System.out.println("Rules saved");
-        rules = rules1;
-        System.out.println("Rule size: " + rules.size());
-    }
-
-    public static ArrayList<DefaultNode> GetRealPathFromGraphPath(Stack<Integer> graph_path){
-        ArrayList<DefaultNode> path = new ArrayList<>();
-        for(int i = 0; i < graph_path.size(); i++){
-            path.add(GetNodeByGraphId(graph_path.get(i)));
-        }
-        return path;
-    }
-
-    public static int GetRandomPointGraphID(int size){
-        //TODO
-        //Return a random point for traffic generation
-        Random random = new Random();
-        return random.nextInt(size);
-    }
-
-    public static double CalculateDistanceInKilometers(double la1, double lo1, double la2, double lo2){
+    //This method calculates distance in meters between two (lat,long) points using the Haversine formula
+    public static double CalculateDistanceInMeters(double la1, double lo1, double la2, double lo2){
         double radius_in_km = 6371;
         //Converting to radians
         double la_radians1 = Math.toRadians(la1);
@@ -239,477 +233,584 @@ public class Generator {
                 + Math.cos(la_radians1) * Math.cos(la_radians2)
                 * Math.pow(Math.sin(diff_lo / 2),2);
         double c = 2 * Math.asin(Math.sqrt(a));
-        return(c * radius_in_km);
+        return(c * radius_in_km)*1000;
     }
 
-    public static double CalculateSpeedPenaltyByAngle(double la1, double lo1, double la2, double lo2, double SumByParts){
-        //An approximation
-        double coefficient = 20.0/25.0;
-        double straight_line_distance = CalculateDistanceInKilometers(la1, lo1, la2, lo2);
-        double difference_in_kilometers = SumByParts - straight_line_distance;
-        System.out.println("The difference in kilometers is: " + difference_in_kilometers + "..");
-        double difference_in_proportion = SumByParts/straight_line_distance;
-        System.out.println("The difference in proportion is: " + difference_in_proportion + "..");
-        double penalty = (difference_in_proportion-1)*coefficient;
-        return (difference_in_proportion-1)*coefficient*100;
+    //Given 3 (lat,long) points, this method calculates whether they form a turn or not
+    public static boolean isTurnIncoming(double la1, double lo1, double la2, double lo2, double la3, double lo3){
+        double distance1 = CalculateDistanceInMeters(la1, lo1, la3, lo3);
+        double distance2 = CalculateDistanceInMeters(la1, lo1, la2, lo2) +
+                CalculateDistanceInMeters(la2, lo2, la3, lo3);
+        double difference = distance2/distance1;
+        return difference > 1.1;
     }
 
-    public static boolean IsIdUnique(int id){
-        if(vehicle_ids.contains(id)){
-            return false;
+    //For a given car path, this method calculates indexes of every pre-turn node
+    public static ArrayList<Integer> GetPreTurnNodeIndexes(ArrayList<DefaultNode> path){
+        ArrayList<Integer> preTurnNodes = new ArrayList<>();
+        for(int i = 1; i < path.size()-2; i++){
+            if(isTurnIncoming(path.get(i-1).latitude, path.get(i-1).longitude, path.get(i).latitude,
+                    path.get(i).longitude, path.get(i+1).latitude, path.get(i+1).longitude)){
+                preTurnNodes.add(i-1);
+            }
         }
-        return true;
+        return preTurnNodes;
     }
 
-    public static boolean IsNodeIdUnique(int id){
-        if(node_ids.contains(id)){
-            return false;
+    //This method returns all connections for a given node (outer and regular)
+    public static ArrayList<Integer> getAllConnections(DefaultNode node){
+        ArrayList<Integer> connections = new ArrayList<>();
+        if (node instanceof InnerNode){
+            connections = node.getConnections();
         }
-        return true;
-    }
-
-    public static boolean IsGraphIdUnique(int id){
-        if(node_graph_ids.contains(id)){
-            return false;
+        else{
+            connections = node.getConnections();
+            for(int i = 0; i < node.outer_connections.size(); i++){
+                connections.add(node.outer_connections.get(i).group_connection_node_id);
+            }
         }
-        return true;
+        return connections;
     }
 
-    public static void TrueGenerateCar(GenerationRule rule) throws Exception {
-        System.out.println("Car gen func called");
+    //This method finds the shortest path between two nodes using by calling the BFS algorithm method
+    public static ArrayList<DefaultNode> GeneratePath(DefaultNode start_node, DefaultNode end_node){
+        //If there is no possible path, the start node will remain the same but the end node will be assigned randomly
         ArrayList<DefaultNode> path = new ArrayList<>();
-        Stack<Integer> stack_path = new Stack<Integer>();
-        System.out.println("LIST SIZE__" + graph.adjacency_list.size() + " NODES___" + graph.number_of_nodes);
-        stack_path = CalculateRandomPathMod(graph, graph.adjacency_list.size(), graph.number_of_nodes, rule.source_node.graph_id, rule.destination_node.graph_id);
-        System.out.println("SIZE____" + stack_path.size());
-        ArrayList<DefaultNode> real_path = new ArrayList<DefaultNode>();
-        real_path = GetRealPathFromGraphPath(stack_path);
-        System.out.println("PATH SIZE: " + stack_path.size() + " AND " + real_path.size());
-        String type = DecideOnCarType(rule);
-        switch (type) {
-            case "Truck" -> {
-                Random rand = new Random();
-                int id = rand.nextInt(1000);
-                if (IsIdUnique(id) && real_path.size() > 1) {
-                    Truck truck = new Truck(id, rule.source_node.id, rule.destination_node.id, real_path, Intent.ACCELERATE,
-                            0, CalculateDistanceInKilometers(real_path.get(0).latitude, real_path.get(0).longitude,
-                            real_path.get(real_path.size() - 1).latitude, real_path.get(real_path.size() - 1).longitude),
-                            rule.source_node.id, 0, 2500, CalculateDistanceInKilometers(real_path.get(0).latitude,
-                            real_path.get(0).longitude, real_path.get(1).latitude, real_path.get(1).longitude),
-                            0, 60,
-                            Objects.requireNonNull(GetNodeGroupById(rule.source_node.group_id)).Nodes.size() - 1,
-                            0, 3.0, rule.source_node.latitude, rule.source_node.longitude,
-                            0);
+        path = breadthFirstSearch(start_node, end_node);
+        if(path.size() < 2){
+            System.out.println("No path can be found between the defined points, therefore assigning random path");
+            for(int i = 0; i < AllNodes.size()-1; i++){
+                Random random = new Random();
+                int randomIndex = random.nextInt(AllNodes.size()-1);
+                if(AllNodes.get(randomIndex) instanceof InnerNode){
+                    return breadthFirstSearch(start_node, AllNodes.get(randomIndex));
+                }
+                else{
+                    GeneratePath(start_node, end_node);
+                }
+            }
+        }
+        return path;
+    }
+
+    //This method performs Breadth-First-Search to find the shortest possible path between two nodes
+    public static ArrayList<DefaultNode> breadthFirstSearch(DefaultNode source, DefaultNode target) {
+        Queue<DefaultNode> queue = new LinkedList<>();
+        ArrayList<DefaultNode> path = new ArrayList<>();
+        queue.add(source);
+
+        // A map to store the parent node for each visited node (to reconstruct the path later)
+        java.util.HashMap<DefaultNode, DefaultNode> parentMap = new java.util.HashMap<>();
+        parentMap.put(source, null);
+
+        // Perform BFS
+        while (!queue.isEmpty()) {
+            DefaultNode current = queue.poll();
+            if (current.equals(target)) {
+                break; // Found the target node
+            }
+
+            ArrayList<Integer> connections = getAllConnections(current);
+            for (Integer nodeId : connections) {
+                DefaultNode adjacentNode = getNodeById(nodeId);
+                if (adjacentNode != null && !parentMap.containsKey(adjacentNode)) {
+                    queue.add(adjacentNode);
+                    parentMap.put(adjacentNode, current);
+                }
+            }
+        }
+        DefaultNode current = target;
+        while (current != null) {
+            path.add(0, current); // Add each node to the beginning of the list
+            current = parentMap.get(current);
+        }
+
+        return path;
+    }
+
+    //This is the method that generates a car according to defined generation rules
+    public static void GenerateCar(DefaultNode start_node, DefaultNode end_node, GenerationRule rule){
+        String carType = DecideOnCarType(rule.vans, rule.trucks, rule.sedans);
+        ArrayList<DefaultNode> real_path = new ArrayList<>();
+        real_path = GeneratePath(start_node, end_node);
+        ArrayList<String> ChecksumValues = new ArrayList<>();
+        ChecksumValues.add(carType);
+        ChecksumValues.add(String.valueOf(Cars.size()));
+        ChecksumValues.add(generateRandomString());
+        int ChecksumId = calculateCheckSum(ChecksumValues);
+        if (IsIdUnique(ChecksumId) && real_path.size() > 1) {
+            //To keep track of last visited nodes
+            ArrayList<Pair> distanceData = CalculateDistanceData(real_path);
+            //For managing turns
+            ArrayList<Integer> preTurnNodes = GetPreTurnNodeIndexes(real_path);
+            double path_distance_in_m = 0;
+            for (Pair distanceDatum : distanceData) {
+                path_distance_in_m = path_distance_in_m + distanceDatum.mark;
+            }
+            switch (carType){
+                case "Truck" -> {
+                    Truck truck = new Truck(ChecksumId, real_path, 0, "Accelerate", 0, 60, 3.0,
+                            real_path.get(0).latitude, real_path.get(0).longitude, 0, path_distance_in_m, distanceData,
+                            preTurnNodes, 0.0, 0.0);
                     Cars.add(truck);
                     JSONObject new_car = new JSONObject();
                     new_car.put("id", truck.id);
                     new_car.put("name", "truck");
                     cars.add(new_car);
-                    System.out.println("Generated new car");
-                } else {
-                    TrueGenerateCar(rule);
                 }
-            }
-            case "Van" -> {
-                Random rand = new Random();
-                int id = rand.nextInt(1000);
-                if (IsIdUnique(id) && real_path.size() > 1) {
-                    Van van = new Van(id, rule.source_node.id, rule.destination_node.id, real_path, Intent.ACCELERATE,
-                            0, CalculateDistanceInKilometers(real_path.get(0).latitude, real_path.get(0).longitude,
-                            real_path.get(real_path.size() - 1).latitude, real_path.get(real_path.size() - 1).longitude),
-                            rule.source_node.id, 0, 2500, CalculateDistanceInKilometers(real_path.get(0).latitude,
-                            real_path.get(0).longitude, real_path.get(1).latitude, real_path.get(1).longitude),
-                            0, 65,
-                            Objects.requireNonNull(GetNodeGroupById(rule.source_node.group_id)).Nodes.size() - 1,
-                            0, 4.0, rule.source_node.latitude, rule.source_node.longitude,
-                            0);
+                case "Van" -> {
+                    Van van = new Van(ChecksumId, real_path, 0, "Accelerate", 0, 65, 4.0,
+                            real_path.get(0).latitude, real_path.get(0).longitude, 0, path_distance_in_m, distanceData,
+                            preTurnNodes, 0.0, 0.0);
                     Cars.add(van);
                     JSONObject new_car = new JSONObject();
                     new_car.put("id", van.id);
                     new_car.put("name", "van");
                     cars.add(new_car);
-                    System.out.println("Generated new car");
-                } else {
-                    TrueGenerateCar(rule);
                 }
-            }
-            case "Sedan" -> {
-                Random rand = new Random();
-                int id = rand.nextInt(1000);
-                if (IsIdUnique(id) && real_path.size() > 1) {
-                    Sedan sedan = new Sedan(id, rule.source_node.id, rule.destination_node.id, real_path, Intent.ACCELERATE,
-                            0, CalculateDistanceInKilometers(real_path.get(0).latitude, real_path.get(0).longitude,
-                            real_path.get(real_path.size() - 1).latitude, real_path.get(real_path.size() - 1).longitude),
-                            rule.source_node.id, 0, 2500, CalculateDistanceInKilometers(real_path.get(0).latitude,
-                            real_path.get(0).longitude, real_path.get(1).latitude, real_path.get(1).longitude),
-                            0, 70,
-                            Objects.requireNonNull(GetNodeGroupById(rule.source_node.group_id)).Nodes.size() - 1,
-                            0, 4.5, rule.source_node.latitude, rule.source_node.longitude,
-                            0);
+                case "Sedan" ->{
+                    Sedan sedan = new Sedan(ChecksumId, real_path, 0, "Accelerate", 0, 70, 4.5,
+                            real_path.get(0).latitude, real_path.get(0).longitude, 0, path_distance_in_m, distanceData,
+                            preTurnNodes, 0.0, 0.0);
                     Cars.add(sedan);
                     JSONObject new_car = new JSONObject();
                     new_car.put("id", sedan.id);
                     new_car.put("name", "sedan");
                     cars.add(new_car);
-                    System.out.println("Generated new car");
-                } else {
-                    TrueGenerateCar(rule);
                 }
             }
-            case "Error" -> {
-                System.out.println("Error generating");
-            }
         }
     }
 
-    public static NodeGroup GetNodeGroupById(String id){
-        for (int i = 0; i < NodeGroups.size(); i++){
-            if (NodeGroups.get(i).id.equals(id)) {
-                return NodeGroups.get(i);
+    //This method returns a randomly generated string to ensure random CRC32 id generation
+    public static String generateRandomString(){
+        String characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        Random random = new Random();
+        StringBuilder sb = new StringBuilder(20);
+
+        for (int i = 0; i < 20; i++) {
+            int index = random.nextInt(characters.length());
+            char randomChar = characters.charAt(index);
+            sb.append(randomChar);
+        }
+
+        return sb.toString();
+    }
+
+    //This method returns a node with a matching id
+    public static DefaultNode getNodeById(int id){
+        for (DefaultNode node : AllNodes) {
+            if (node.getId() == id) {
+                return node;
             }
         }
         return null;
     }
 
-    public static DefaultNode GetNodeById(int id){
-        for(int i = 0; i < AllNodes.size(); i++){
-            if (AllNodes.get(i).id == id){
-                return AllNodes.get(i);
-            }
-        }
-        return null;
-    }
-
-    public static String DecideOnCarType(GenerationRule rule){
-        double Sum = rule.sedans + rule.vans + rule.trucks;
-        double sedans_chance = (100*rule.sedans)/Sum;
-        double vans_chance = (100*rule.vans)/Sum;
-        double trucks_chance = (100*rule.trucks)/Sum;
-        Random rand = new Random();
-        int num = rand.nextInt(100)+1;
-        if(num < sedans_chance){
-            return "Sedan";
-        }
-        else if(sedans_chance < num && num < vans_chance){
+    //This method pseudo-randomly selects a car type
+    public static String DecideOnCarType(boolean vans, boolean trucks, boolean sedans){
+        //If only one is true, method immediately returns
+        if(vans && !trucks && !sedans){
             return "Van";
         }
-        else if(num > vans_chance){
+        else if(!vans && trucks && !sedans){
             return "Truck";
         }
-        return "Error";
+        else if(!vans && !trucks && sedans){
+            return "Sedan";
+        }
+        ArrayList<String> randomizerList = new ArrayList<>();
+        if(vans){
+            randomizerList.add("Van");
+        }
+        if(trucks){
+            randomizerList.add("Truck");
+        }
+        if(sedans){
+            randomizerList.add("Sedan");
+        }
+        Random rand = new Random();
+        int n = rand.nextInt(randomizerList.size());
+        return randomizerList.get(n);
     }
 
-    //Borrowed part code
-    public static boolean CalculatePath(Graph graph, int src, int dest,
-                                                   boolean[] discovered, Stack<Integer> path){
-        // mark the current node as discovered
-        discovered[src] = true;
-        // include the current node in the path
-        path.add(src);
-        // if destination vertex is found
-        if (src == dest) {
-            return true;
-        }
-        // do for every edge (src, i)
-        for (int i : graph.adjacency_list.get(src))
-        {
-            // if `u` is not yet discovered
-            if (!discovered[i])
-            {
-                // return true if the destination is found
-                if (CalculatePath(graph, i, dest, discovered, path)) {
-                    return true;
-                }
-            }
-        }
-        // backtrack: remove the current node from the path
-        path.pop();
-        return false;
-    }
-
-    public static Stack<Integer> CalculateRandomPathMod(Graph graph, int total_number_of_edges, int total_number_of_nodes,
-                                                        int source_graph_id, int destination_graph_id) throws Exception {
-        boolean[] discovered = new boolean[total_number_of_edges*2];
-        boolean[] discovered2 = new boolean[total_number_of_edges*2];
-        Stack<Integer> path = new Stack<>();
-        int mid_point_id = GetRandomPointGraphID(total_number_of_nodes);
-        if(CalculatePath(graph, source_graph_id, destination_graph_id, discovered, path)){
-            discovered = new boolean[discovered.length];
-            Stack<Integer> path_copy = new Stack<Integer>();
-            Stack<Integer> path_copy_2 = new Stack<Integer>();
-            if(CalculatePath(graph, source_graph_id, mid_point_id, discovered, path_copy) &&
-                    CalculatePath(graph, mid_point_id, destination_graph_id, discovered2, path_copy_2)){
-                //ALL good -
-                path_copy.pop();
-                Stack<Integer> final_path = new Stack<>();
-                final_path = path_copy;
-                final_path.addAll(path_copy_2);
-                System.out.println("Path exists from vertex " + source_graph_id + " to vertex " + mid_point_id +
-                        " to vertex " + destination_graph_id);
-                System.out.println("The complete path is " + path_copy);
-                return final_path;
-            }
-            else{
-                return CalculateRandomPathMod(graph, total_number_of_edges, total_number_of_nodes, source_graph_id, destination_graph_id);
-            }
-        }
-        System.out.println("ERROR: " + mid_point_id);
-        //No idea how this could be happening - even though the input doesn't change CalculatePath sometimes returns false
-        return CalculateRandomPathMod(graph, total_number_of_edges, total_number_of_nodes, source_graph_id, mid_point_id);
-    }
-
-    public static void StartTimer(int seconds, int frame) throws Exception {
-        //TODO
+    //This method manages the simulation, calling the 'main' method and car generator method when needed
+    public static void StartTimer(ConfigurationData configurationData, int frame) throws Exception {
         //Assuming that for every iteration 1/10th of a second passes in a simulation
-        for(int i = 0; i <seconds; i++){
+        int seconds = (int) (configurationData.duration)*60;
+        try(FileWriter myWriter1 = new FileWriter("files\\framesVisual.csv", false)) {
+            System.out.println("Clearing the results file before writing");
+        }
+        catch (IOException e){
+            System.out.println("An error occurred.");
+            e.printStackTrace();
+        }
+        for(int i = 0; i < seconds*10; i++){
+            System.out.println("i: " + i);
+            System.out.println("Seconds: " + seconds);
+            System.out.println("Cars size: " + Cars.size());
             if(i == seconds-1){
                 SaveJSON();
                 return;
             }
             frame++;
             CalculateAllPositions(Cars, i, frame);
-            DefineGeneration(i);
-        }
-    }
-
-    public static Pair GetNextNodeInPathIdAndPositionInArr(ArrayList<DefaultNode> path, int last_visited_node_id) throws Exception {
-        //For now, the complexity would be O(n) - but later a more efficient way to search
-        //can be implemented - with use of this:
-        //https://stackoverflow.com/questions/558978/most-efficient-way-to-see-if-an-arraylist-contains-an-object-in-java
-        int node_position_in_arraylist = 0;
-        for(int i = 0; i < path.size()-1; i++){
-            if(path.get(i).id == last_visited_node_id){
-                //1ST element is node Id, second is its position in array.
-                return new Pair(path.get(i+1).id, i+1);
+            //Epoch progress is here to decide when a new car is bound to be generated
+            epochProgress = epochProgress + epochProgressStep;
+            System.out.println("Epoch Progress: " + epochProgress);
+            if(epochProgress >= 100.0){
+                Random rand = new Random();
+                currentEpochTimer = rand.nextInt(6) + 10;
+                epochProgressStep = (100.0 / (double) currentEpochTimer);
+                epochProgress = 0.0;
+                ExecuteEpochGeneration(configurationData);
             }
         }
-        throw new Exception("Error finding the next node");
     }
 
+    //This method creates a helper collection used for managing car position
+    public static ArrayList<Pair> CalculateDistanceData(ArrayList<DefaultNode> path){
+        ArrayList<Pair> distanceData = new ArrayList<>();
+        double currentCoveredDistance = 0;
+        Pair pair1 = new Pair(path.get(0).id, 0.0);
+        distanceData.add(pair1);
+        for(int i = 0; i < path.size()-1; i++){
+            double la1 = path.get(i).latitude;
+            double lo1 = path.get(i).longitude;
+            double la2 = path.get(i+1).latitude;
+            double lo2 = path.get(i+1).longitude;
+            double distance = CalculateDistanceInMeters(la1, lo1, la2, lo2);
+            currentCoveredDistance = currentCoveredDistance + distance;
+            Pair pair = new Pair(path.get(i+1).id, currentCoveredDistance);
+            distanceData.add(pair);
+        }
+        return distanceData;
+    }
+
+    //This method returns the distance left to next turn
+    public static double getDistanceBeforeNearestTurnNode(Vehicle car){
+        //find a minimum number from preTurnNodes
+        int minNumber = getMinimumNumber(car.lastVisitedNodeIndexInPath, car.preTurnNodes);
+        return CalculateDistanceInMeters(car.latitude, car.longitude, car.path.get(minNumber).latitude,
+                car.path.get(minNumber).longitude);
+    }
+
+    //This method returns a node before the given turn
+    public static int getMinimumNumber(int borderNumber, ArrayList<Integer> preTurnNodes){
+        int min = Integer.MAX_VALUE;
+        for (Integer preTurnNode : preTurnNodes) {
+            if (preTurnNode < min) {
+                if (min > borderNumber) {
+                    min = preTurnNode;
+                }
+            }
+        }
+        return min;
+    }
+
+    //This method returns the last visited node index
+    public static int getRelevantNodeIndexInPath(Vehicle car) throws Exception {
+        if(car.getProgress_in_m() < car.distanceData.get(1).mark){
+            return 0;
+        }
+        for(int i = 1; i < car.distanceData.size(); i++){
+            if((car.distanceData.get(i-1).mark == car.distanceData.get(i).mark) && (car.distanceData.get(i-1).mark < car.getProgress_in_m())
+            && (car.distanceData.get(i+1).mark) > car.getProgress_in_m()){
+                return i;
+            }
+            else if(car.distanceData.get(i-1).mark < car.getProgress_in_m() && car.getProgress_in_m() < car.distanceData.get(i).mark){
+                return i-1;
+            }
+        }
+        return -1;
+    }
+
+    //This method returns a distance a car has travelled after last visited node
+    public static double getRelevantProgressSinceLastNodeInM(Vehicle car) throws Exception{
+        if(car.lastVisitedNodeIndexInPath == 0){
+            return car.getProgress_in_m();
+        }
+        for(int i = 1; i < car.distanceData.size(); i++){
+            if(car.distanceData.get(i-1).mark < car.getProgress_in_m() && car.getProgress_in_m() < car.distanceData.get(i).mark){
+                double progress = car.getProgress_in_m()-car.distanceData.get(i-1).mark;
+                if (progress < 0.0) {
+                    throw new Exception("Progress should not be less than 0.0");
+                }
+                return car.getProgress_in_m()-car.distanceData.get(i).mark;
+            }
+        }
+        throw new Exception("Critical error when locating car position");
+    }
+
+    //This method calculates car coordinates using bearing angle, previous coordinates and distance travelled
+    public static Pair getRelevantCoordinates(Vehicle car){
+        //Instead of doing Haversine, do the bearing calculation
+        double latitude1 = Math.toRadians(car.path.get(car.lastVisitedNodeIndexInPath).latitude);
+        double longitude1 = Math.toRadians(car.path.get(car.lastVisitedNodeIndexInPath).longitude);
+
+        double bearing = getBearingAngle(car.path.get(car.lastVisitedNodeIndexInPath).latitude,
+                car.path.get(car.lastVisitedNodeIndexInPath).longitude,
+                car.path.get(car.lastVisitedNodeIndexInPath+1).latitude,
+                car.path.get(car.lastVisitedNodeIndexInPath+1).longitude);
+
+        double distanceInMeters = CalculateDistanceInMeters(car.path.get(car.lastVisitedNodeIndexInPath).latitude,
+                car.path.get(car.lastVisitedNodeIndexInPath).longitude,
+                car.path.get(car.lastVisitedNodeIndexInPath+1).latitude,
+                car.path.get(car.lastVisitedNodeIndexInPath+1).longitude);
+
+        double radius = 6371000;
+
+        double newLatitude = Math.asin(Math.sin(latitude1) * Math.cos(distanceInMeters / radius) +
+                Math.cos(latitude1) * Math.sin(distanceInMeters / radius) * Math.cos(bearing));
+        double newLongitude = longitude1 + Math.atan2(Math.sin(bearing) * Math.sin(distanceInMeters / radius) * Math.cos(latitude1),
+                Math.cos(distanceInMeters / radius) - Math.sin(latitude1) * Math.sin(newLatitude));
+
+        // Convert back to degrees
+        newLatitude = Math.toDegrees(newLatitude);
+        newLongitude = Math.toDegrees(newLongitude);
+
+        return new Pair(newLatitude, newLongitude);
+    }
+
+    //Hardcoded speed values, this method returns a car's relevant speed
+    public static double getRelevantSpeed(Vehicle car){
+        double converted_speed = car.speed/3.6;
+        if(car.intent.equals("Accelerate")){
+            //Final speed (in m/s) = Initial speed (in m/s) + (Acceleration rate * Time)
+            if(car.speed >= 60.0 || 3.6*(converted_speed + (car.acceleration_rate*0.1)) >= 60){
+                return 60.0;
+            }
+            else{
+                return 3.6*(converted_speed + (car.acceleration_rate*0.1));
+            }
+        }
+        else if (car.intent.equals("Slow down")){
+            if(car.speed <= 30){
+                return 30.0;
+            }
+            else{
+                return 3.6*(converted_speed - (car.deceleration_rate*0.1));
+            }
+        }
+        else{
+            return car.speed;
+        }
+    }
+
+    //This method is most important, it handles all car movement and more
     public static void CalculateAllPositions(ArrayList<Vehicle> Cars, int second, int frame) throws Exception {
         for(int i = 0; i < Cars.size(); i++){
-            //TODO
             Vehicle car = Cars.get(i);
-            //Checking the distance travelled with the current speed
-            double distance_travelled = CalculateDistanceTravelled(car.speed);
-            //1. How much distance would the car cover with the current speed in 1/10th of a sec)
-            car.setProgress_in_km(car.progress_in_km + distance_travelled);
-            //Now, we check if the car has passed any nodes
-            //Assuming that it is impossible to pass more than 1 node in
-            //the given amount of time(currently 1/10 sec)
-            if(car.progress_since_last_node_in_km >= car.distance_to_next_node)
-            {
-                //1.1 Checking if the car has reached it's destination
-                //and deleting the car if that is so
-                Pair pair = GetNextNodeInPathIdAndPositionInArr(car.path, car.last_visited_node_id);
-                if(pair.y == car.path.size()-1){
-                    System.out.println("CAR REMOVED ON " + second/10 + "'s SECOND");
+            if(car.distanceData.get(1).mark == 0.0){
+                Cars.remove(car);
+                break;
+            }
+            if(car.path.get(car.path.size()-2).id == car.path.get(car.lastVisitedNodeIndexInPath+1).id){
+                System.out.println("Removing car");
+                Cars.remove(car);
+                break;
+            }
+            else{
+                //Processing the data to catch up on relevant car status
+                double distanceTravelled = CalculateDistanceTravelled(car.speed);
+                car.setProgress_in_m(car.getProgress_in_m()+distanceTravelled);
+                if(getRelevantNodeIndexInPath(car) != -1) {
+                    car.setLastVisitedNodeIndexInPath(getRelevantNodeIndexInPath(car));
+                }
+                else{
+                    System.out.println("Error - Removing car");
                     Cars.remove(car);
-                    //SaveJSON();
+                    break;
                 }
-
-                //1.1,5 Updating the sum of node distances for future use
-                Pair pair2 = GetNextNodeInPathIdAndPositionInArr(car.path, car.last_visited_node_id);
-
-                car.setSum_of_node_distances(car.sum_of_node_distances + CalculateDistanceInKilometers(
-                        car.path.get(pair2.y-1).latitude, car.path.get(pair.y-1).longitude,
-                        car.path.get(pair2.y).latitude, car.path.get(pair.y).longitude));
-
-                //1.2 Setting the node that was the original next goal as the last visited node
-                car.setLast_visited_node_id(pair.x);
-                //1.3 Setting the progress from the last node (distance driven from the last visited node)
-                //The whole distance - distance from start node to last visited node
-                car.setProgress_since_last_node_in_km(car.progress_in_km - car.sum_of_node_distances);
-
-
-                //1.4 Updating car distance to next node
-                car.setDistance_to_next_node(CalculateDistanceInKilometers(car.path.get(pair.y).latitude,
-                        car.path.get(pair.y).longitude, car.path.get(pair.y+1).latitude,
-                        car.path.get(pair.y+1).longitude));
-
-                //1.5 Checking if the node_group has changed and altering the fitting_speed
-                //and group_nodes_left counter if so
-                if(car.group_nodes_left == 1){
-                    //Node group has changed, now fitting speed needs to be changed.
-                    //So we search for the Current Nodegroup and extract information
-                    //about the fitting speed and amount of nodes from there
-                    //Later, Composite Id's for all nodes may be implemented.
-                    //So that we'll know both node id and group node id just
-                    //by one node_id that would look like that: 34_15
-                    //For now, we'll just search for the nodegroup by id
-                    Pair another_pair = GetFittingSpeedAndNodeCountByNodeGroupId(car.path.get(pair.y+1).group_id);
-                    car.setGroup_nodes_left(another_pair.b);
-                    car.setFitting_speed(another_pair.a);
+                if(car.lastVisitedNodeIndexInPath == car.path.size()-3){
+                    Cars.remove(car);
                 }
-                car.setGroup_nodes_left(car.group_nodes_left-1);
+                car.setProgress_since_last_node_in_m(getRelevantProgressSinceLastNodeInM(car));
+
+                Pair pair = new Pair();
+                pair = getRelevantCoordinates(car);
+                car.setLatitude(pair.latitude);
+                car.setLongitude(pair.longitude);
+
+                car.setAngle(getBearingAngle(car.path.get(car.lastVisitedNodeIndexInPath).latitude,
+                        car.path.get(car.lastVisitedNodeIndexInPath).longitude,
+                        car.path.get(car.lastVisitedNodeIndexInPath+1).latitude,
+                        car.path.get(car.lastVisitedNodeIndexInPath+1).longitude));
+
+                System.out.println("Car " + car.id + " travelled " + distanceTravelled + "m, amounting to " +
+                        car.progress_in_m + "m out of " + car.distanceData.get(car.distanceData.size()-1).mark +
+                        "m total with last visited node path index of " + car.lastVisitedNodeIndexInPath + " out of " +
+                        car.distanceData.size());
+
+                //Preparation for the next frame
+                double distanceToNearestTurn = Double.MAX_VALUE;
+                if(car.preTurnNodes.size()>0){
+                    distanceToNearestTurn = getDistanceBeforeNearestTurnNode(car);
+                }
+                if(car.brakingDistance+10 > distanceToNearestTurn){
+                    car.setIntent("Slow down");
+                }
+                else{
+                    if(car.speed < 60){
+                        car.setIntent("Accelerate");
+                    }
+                    else{
+                        car.setIntent("Keep");
+                    }
+                }
+                car.setSpeed(getRelevantSpeed(car));
             }
-            else if(car.progress_since_last_node_in_km < car.distance_to_next_node){
-                //1.1 Updating progress in distance since last node
-                car.setProgress_since_last_node_in_km(car.progress_since_last_node_in_km + distance_travelled);
-            }
-            //Then, if Intent is to accelerate increase the speed by an appropriate value
-            //If Intent is to brake, the speed shall be decreased.
-            //If intent is to wait, speed is 0 and it holds still.
-            //If the intent is to keep the speed, keep it
-            if(car.speed >= car.fitting_speed){
-                car.setIntent(Intent.KEEP);
-            }
-            else {
-                car.setSpeed(ManageSpeed(car.intent, car.speed, car.fitting_speed, car.acceleration_rate));
-            }
-            //At last, we update the latitude and longitude parameters:
-            DefaultNode carLastVisitedNode = getNodeFromID(car.getLast_visited_node_id());
-            Pair pair = GetNextNodeInPathIdAndPositionInArr(car.path, car.last_visited_node_id);
-
-            DefaultNode nextNode = getNodeFromID(pair.x);
-
-            Pair pair3 = CalculatePointByDistanceAndBearing(carLastVisitedNode.latitude, carLastVisitedNode.longitude,
-                    car.progress_since_last_node_in_km/6371.0,
-                    Math.toRadians(bearing(carLastVisitedNode.latitude, carLastVisitedNode.longitude,
-                            nextNode.latitude, nextNode.longitude)));
-
-            car.setLatitude(pair3.latitude);
-            car.setLongitude(pair3.longitude);
-
-            car.setAngle(bearing(carLastVisitedNode.latitude, carLastVisitedNode.longitude,
-                    nextNode.latitude, nextNode.longitude));
-
-            //HERE
-            //WriteToJSON(car, second);
-
-            System.out.println("CAR LAT: " + pair3.latitude + " CAR LONG: " + pair3.longitude);
-            //The last node parameter should be checked and the distance in km from the last visited node calculated.
-            System.out.println("Last visited node: " + car.last_visited_node_id);
-            System.out.println("Group nodes left: " + car.group_nodes_left);
-            System.out.println("Distance to the next node is: " + (car.distance_to_next_node - car.progress_since_last_node_in_km));
-            System.out.println("Initial distance to next node is: " + car.distance_to_next_node);
-            System.out.println("Total Distance travelled: " + car.progress_in_km + " km\n");
-            System.out.println("Sum of node distances: " + car.sum_of_node_distances);
         }
         createPositionReport(second, frame);
+        createPositionReportVisual(second, frame);
     }
 
+    //This method returns a node with a matching id
     public static DefaultNode getNodeFromID(int id) throws Exception {
-        for(int i = 0; i < AllNodes.size(); i++){
-            if(AllNodes.get(i).id == id){
-                return AllNodes.get(i);
+        for (DefaultNode allNode : AllNodes) {
+            if (allNode.id == id) {
+                return allNode;
             }
         }
         throw new Exception();
     }
 
-    public static double ManageSpeed(Intent intent, double speed, double fitting_speed, double acceleration_rate){
-        //The acceleration rate would be constant for now - 4m/s^2
-        //So int 1/10s the the car would accelerate by (4/10)m/s
-        double converted_acceleration_rate = acceleration_rate*0.36;
-       if(intent == Intent.ACCELERATE){
-           //(4/10)m/s^2 = 1.44 km/h/s
-           return speed+converted_acceleration_rate;
-       }
-       else{
-           return speed;
-       }
-    }
-
-    public static Pair GetFittingSpeedAndNodeCountByNodeGroupId(String node_group_id) throws Exception {
-        //For now, the complexity here would also be O(n),
-        //but this implementation is subject for a change
-        for(int i = 0; i < NodeGroups.size()-1; i++){
-            if (NodeGroups.get(i).id.equals(node_group_id)) {
-                return new Pair(NodeGroups.get(i).fitting_speed, NodeGroups.get(i).Nodes.size()-1);
-            }
-        }
-        throw new Exception("Error when searching for a node group");
-    }
-
+    //This method returns the travelled distance based on speed
     public static double CalculateDistanceTravelled(double speed){
         //Speed parameter is in km/h
         //1St - calculate speed in km/s
         //By dividing the speed value by 3.6 we get m/s
-        double converted_speed = ((double) speed/3.6)/1000;
-        System.out.println("Current speed: " + speed + " km/h");
+        double converted_speed = ((double) speed/3.6);
         //Now, to calculate distance travelled in 1/10th of a sec
         return converted_speed/10;
     }
 
-    public static void CreateNodes() throws IOException, ParseException {
-        //"../.data/maps/simple_map/simple_map.geojson"
+    //This method calculates a unique CRC32 value
+    public static int calculateCheckSum(ArrayList<String> values){
+        CRC32 crc32 = new CRC32();
+
+        for (String variable : values) {
+            crc32.update(variable.getBytes());
+        }
+
+        return (int) crc32.getValue();
+    }
+
+    public static boolean isCoordinateCRC32LatLongUnique(int value){
+        for (Pair pair : coordinateUniqueCRCList) {
+            if (pair.y == value) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public static boolean isCoordinateCRC32LatLongGroupUnique(int value){
+        for (Pair pair : coordinateUniqueCRCList) {
+            if (pair.x == value) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public static int getLatLongGroupCRC32IdByLatLongCRC32Id(int value){
+        //We get LatLongId, search for match(ONLY ONE MATCH POSSIBLE)
+        for (Pair pair : coordinateUniqueCRCList) {
+            if (pair.y == value) {
+                return pair.x;
+            }
+        }
+        return 0;
+    }
+
+    public static boolean isLatLongGroupIdInOuterNodes(int value){
+        for (Pair outerNodeId : OuterNodeIds) {
+            if (outerNodeId.x == value) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    //This method converts the map data into an internal structure of nodes
+    public static void CreateNodes() throws Exception {
         //Every single node where a dynamic object may appear(A highway, a road, e.t.c.)
         //And its relation is to be organised in the node structure(Node and NodeGroup objects
         //which shall all exist in memory while the code is running)
-        Object obj = new JSONParser().parse(new FileReader("../.data/maps/test_map/schema.geojson"));
+        Object obj = new JSONParser().parse(new FileReader("files\\schema.geojson"));
         JSONObject map = (JSONObject) obj;
-
         JSONArray features = (JSONArray) map.get("features");
-        for (int i = 0; i < features.size(); i++) {
-            Object current = features.get(i);
-            JSONObject curr = (JSONObject) features.get(i);
+        for (Object current : features) {
+            JSONObject curr = (JSONObject) current;
             JSONObject properties = (JSONObject) curr.get("properties");
-            System.out.println(properties);
             String str = (String) properties.get("highway");
-            Random rand = new Random();
-            System.out.println(str);
-            if(str != null) {
+            if (str != null) {
                 if (str.equals("motorway") || str.equals("trunk") || str.equals("primary") || str.equals("secondary") ||
                         str.equals("tertiary") || str.equals("unclassified") || str.equals("residential") ||
-                str.equals("track") || str.equals("road")) {
+                        str.equals("track") || str.equals("road") || str.equals("service") || str.equals("pedestrian") ||
+                        str.equals("motorway_link") || str.equals("trunk_link") || str.equals("primary_link")) {
                     String group_id = (String) curr.get("id");
-                    //group_id = group_id.substring(4);
                     group_id = group_id.replaceAll("[^0-9]", "");
-                    //int groupId = Integer.parseInt(group_id);
-                    System.out.println("GROUP ID: " + group_id);
-                    System.out.println("---------------" + str);
                     ArrayList<DefaultNode> group_nodes = new ArrayList<>();
                     NodeGroup group = new NodeGroup(group_id, str, group_nodes, 60);
-                    //Object geometry = ((JSONObject) current).get("geometry");
                     JSONObject geometry = (JSONObject) ((JSONObject) current).get("geometry");
                     JSONArray coordinates = (JSONArray) geometry.get("coordinates");
-                    for (int j = 0; j < coordinates.size(); j++) {
+                    for (Object coordinate : coordinates) {
+                        if (coordinate instanceof JSONArray) {
+                            //getting lat and long coordinates
+                            JSONArray lat_and_long = (JSONArray) coordinate;
 
-                        System.out.println(coordinates.get(j));
-                        if (coordinates.get(j) instanceof JSONArray) {
-                            JSONArray lat_and_long = (JSONArray) coordinates.get(j);
+                            // Generating a unique checksum id based on lat, long and group id of a node
+                            String latitude = lat_and_long.get(0).toString();
+                            String longitude = lat_and_long.get(1).toString();
+                            ArrayList<String> ChecksumValues = new ArrayList<>();
+                            ChecksumValues.add(latitude);
+                            ChecksumValues.add(longitude);
+                            ChecksumValues.add(group_id);
+                            int ChecksumId = calculateCheckSum(ChecksumValues);
 
-                            System.out.println("lat: " + lat_and_long.get(0));
-                            //The first and last nodes are outer nodes
-                            //CONNECTIONS AND GRAPH IDS are at first unpopulated
-                            if (j == coordinates.size() - 1) {
-                                int id = rand.nextInt(50000) + 1;
-                                int graph_id = node_graph_ids.size();
-                                if (IsNodeIdUnique(id)) {
-                                    OuterNode node = new OuterNode(id, (double) lat_and_long.get(0),
-                                            (double) lat_and_long.get(1), group_id, null, graph_id);
-                                    node_ids.add(id);
-                                    node_graph_ids.add(graph_id);
-                                    group_nodes.add(node);
-                                    //AllNodes.add(node);
+                            //Generating another unique id, for only for checking lat, long
+                            ArrayList<String> ChecksumValues2 = new ArrayList<>();
+                            ChecksumValues2.add(latitude);
+                            ChecksumValues2.add(longitude);
+                            int ChecksumId2 = calculateCheckSum(ChecksumValues2);
+
+                            //coordinateUniqueCRCList is a list of nodes with unique lat, long coordinates
+                            //OuterNodes is a list (transformed to a list of lists later) of nodes with
+                            // unique lat,long,group hash values/combinations
+                            // but the same lat long coordinates
+                            if (isCoordinateCRC32LatLongUnique(ChecksumId2)) {
+                                if (isCoordinateCRC32LatLongGroupUnique(ChecksumId)) {
+                                    Pair pair = new Pair(ChecksumId, ChecksumId2);
+                                    coordinateUniqueCRCList.add(pair);
                                 } else {
-                                    OuterNode node = new OuterNode(rand.nextInt(50000) + 1,
-                                            (double) lat_and_long.get(0), (double) lat_and_long.get(1), group_id,
-                                            null, graph_id);
-                                    node_ids.add(id);
-                                    node_graph_ids.add(graph_id);
-                                    group_nodes.add(node);
-                                    //AllNodes.add(node);
+                                    System.out.println("Critical error - detected 2 nodes from the same group, " +
+                                            "with the same coordinates");
+                                }
+                            } else {
+                                Pair pair = new Pair(ChecksumId, ChecksumId2);
+                                OuterNodeIds.add(pair);
+                                //We also need to add the initial node, after checking that its lat,long,group id is unique
+                                int latLongGroupId = getLatLongGroupCRC32IdByLatLongCRC32Id(ChecksumId2);
+                                if (!isLatLongGroupIdInOuterNodes(latLongGroupId)) {
+                                    Pair pair2 = new Pair(latLongGroupId, ChecksumId2);
+                                    OuterNodeIds.add(pair2);
                                 }
                             }
-                            //Other nodes shall be inner nodes
-                            else {
-                                int id = rand.nextInt(50000) + 1;
-                                int graph_id = node_graph_ids.size();
-                                if (IsNodeIdUnique(id)) {
-                                    InnerNode node = new InnerNode(id, (double) lat_and_long.get(0), (double) lat_and_long.get(1), 0, group_id, graph_id);
-                                    node_ids.add(id);
-                                    node_graph_ids.add(graph_id);
-                                    group_nodes.add(node);
-                                    //AllNodes.add(node);
-                                } else {
-                                    InnerNode node = new InnerNode(id, (double) lat_and_long.get(0), (double) lat_and_long.get(1), 0, group_id, graph_id);
-                                    node_ids.add(id);
-                                    node_graph_ids.add(graph_id);
-                                    group_nodes.add(node);
-                                    //AllNodes.add(node);
-                                }
+                            //graph id = graph size + 1, always
+                            int graph_id = node_graph_ids.size();
+                            if (!IsNodeIdUnique(ChecksumId)) {
+                                System.out.println("Critical error - detected 2 nodes from the same group, " +
+                                        "with the same coordinates");
+                            } else {
+                                //CONNECTIONS AND GRAPH IDS are at first unpopulated
+                                ArrayList<Integer> connections = new ArrayList<>();
+                                InnerNode node = new InnerNode(ChecksumId, (double) lat_and_long.get(1),
+                                        (double) lat_and_long.get(0), group_id, connections, graph_id);
+                                node_ids.add(ChecksumId);
+                                node_graph_ids.add(graph_id);
+                                group_nodes.add(node);
                             }
                         }
                     }
@@ -718,14 +819,134 @@ public class Generator {
                     NodeGroups.add(group);
                     AllNodes.addAll(group.Nodes);
                     System.out.println("Node count: ______ " + group_nodes.size());
+                    SetOuterNodes();
                 }
             }
         }
     }
 
+    //This method searches for every outer node that was previously found
+    public static void SetOuterNodes() throws Exception {
+        //This method searches for every outer node that was previously found,
+        //using OuterNodeIds collection that contains 2 identifiers - for nodes(0) and coordinates "hash"(1)
+        //First step - count unique coordinate pairs to get the number of buckets
+
+        ArrayList<Integer> UniqueLatLongCRC32Ids = new ArrayList<>();
+        for (Pair outerNodeId : OuterNodeIds) {
+            int coordinateID = outerNodeId.y;
+            if (isCoordinateSetUnique(UniqueLatLongCRC32Ids, coordinateID)) {
+                UniqueLatLongCRC32Ids.add(coordinateID);
+            }
+        }
+
+        //After making the check above, we only need to sort OuterNodes to transform it to an array of arrays
+
+        //This is for changing type
+        for (Pair outerNodeId : OuterNodeIds) {
+            int nodeId = outerNodeId.x;
+            transformNodeTypeForAllCollections(nodeId);
+        }
+
+        //Now we need to set OuterConnections Attribute which was previously null
+        //For each element of ArrayList<Pair>, (Or without creating such data structure) we need to create a search by
+        // id the nodes from the same arraylist,
+        //create a new arraylist representing connections and after that use the set method
+        //String group_connection_id, int group_connection_node_id
+
+        for (Pair outerNodeId : OuterNodeIds) {
+            int latLongGroupId = outerNodeId.x;
+            int latLongId = outerNodeId.y;
+            ArrayList<Integer> connectionLatLongGroupIds = getConnectionIdsByLatLongId(latLongId);
+            ArrayList<OuterConnection> outerConnections = getOuterConnectionsByLatLongGroupIds(connectionLatLongGroupIds);
+            setOuterConnectionsForNodeForAllCollections(latLongGroupId, outerConnections);
+        }
+
+        //Now that we have a collection of buckets with each containing some number of
+        //pairs(lat+long+group ID; lat+long ID), we can access the two collections that concern Inner Nodes and
+        //transform the found InnerNodes to OuterNodes
+        //NodeGroups -> group -> nodes
+        //AllNodes -> nodes
+    }
+
+    public static ArrayList<OuterConnection> getOuterConnectionsByLatLongGroupIds(ArrayList<Integer> connectionLatLongGroupIds) throws Exception {
+        ArrayList<OuterConnection> outerConnections = new ArrayList<>();
+        for (int latLongGroupId : connectionLatLongGroupIds) {
+            DefaultNode node = getNodeFromID(latLongGroupId);
+            OuterConnection outerConnection = new OuterConnection(node.group_id, latLongGroupId);
+            outerConnections.add(outerConnection);
+        }
+        return outerConnections;
+    }
+
+    public static void setOuterConnectionsForNodeForAllCollections(
+            int nodeLatLongGroupId, ArrayList<OuterConnection> outerConnections) throws Exception {
+        DefaultNode node = getNodeFromID(nodeLatLongGroupId);
+        ArrayList<Integer> connections = node.getConnections();
+        OuterNode outerNode = new OuterNode(node.id, node.latitude, node.longitude, node.group_id, outerConnections,
+                connections, node.graph_id);
+        replaceNodeInAllNodes(outerNode);
+        replaceNodeInNodeGroups(outerNode);
+    }
+
+    public static ArrayList<Integer> getConnectionIdsByLatLongId(int latLongId){
+        ArrayList<Integer> connections = new ArrayList<>();
+        for (Pair outerNodeId : OuterNodeIds) {
+            if (outerNodeId.y == latLongId) {
+                connections.add(outerNodeId.x);
+            }
+        }
+        return connections;
+    }
+
+    public static void transformNodeTypeForAllCollections(int id){
+        DefaultNode node = getNodeById(id);
+        if (node instanceof InnerNode){
+            ArrayList<Integer> connections = node.getConnections();
+            OuterNode outerNode = new OuterNode(id, node.latitude, node.longitude, node.group_id, null,
+                    connections, node.graph_id);
+            int numberOfCorrectionsAllNodes = replaceNodeInAllNodes(outerNode);
+            int numberOfCorrectionsNodeGroups = replaceNodeInNodeGroups(outerNode);
+            if (numberOfCorrectionsAllNodes != numberOfCorrectionsNodeGroups){
+                System.out.println("Critical error - OuterNodes are not synchronised between collections");
+            }
+        }
+    }
+
+    public static int replaceNodeInAllNodes(OuterNode node){
+        int number = 0;
+        for(int i = 0; i < AllNodes.size(); i++){
+            if(AllNodes.get(i).id == node.id){
+                AllNodes.set(i, node);
+                number++;
+            }
+        }
+        return number;
+    }
+
+    public static int replaceNodeInNodeGroups(OuterNode node){
+        int number = 0;
+        for (NodeGroup nodeGroup : NodeGroups) {
+            for (int j = 0; j < nodeGroup.getNodes().size(); j++) {
+                if (nodeGroup.getNodes().get(j).id == node.id) {
+                    nodeGroup.getNodes().set(j, node);
+                    number++;
+                }
+            }
+        }
+        return number;
+    }
+
+    public static boolean isCoordinateSetUnique(ArrayList<Integer> set, int value){
+        for (Integer integer : set) {
+            if (integer == value) {
+                return false;
+            }
+        }
+        return true;
+    }
 
     //borrowed method
-    protected static double bearing(double lat1, double lon1, double lat2, double lon2){
+    public static double getBearingAngle(double lat1, double lon1, double lat2, double lon2){
         double latitude1 = Math.toRadians(lat1);
         double latitude2 = Math.toRadians(lat2);
         double longDiff= Math.toRadians(lon2 - lon1);
@@ -734,83 +955,133 @@ public class Generator {
         return (Math.toDegrees(Math.atan2(y, x))+360)%360;
     }
 
-    //borrowed method
-    public static Pair CalculatePointByDistanceAndBearing(double lat1, double lon1, double dist, double brng){
-        lat1 = Math.toRadians(lat1);
-        lon1 = Math.toRadians(lon1);
-        double lat2 = Math.asin( Math.sin(lat1)*Math.cos(dist) + Math.cos(lat1)*Math.sin(dist)*Math.cos(brng) );
-        double a = Math.atan2(Math.sin(brng)*Math.sin(dist)*Math.cos(lat1), Math.cos(dist)-Math.sin(lat1)*Math.sin(lat2));
-        double lon2 = lon1 + a;
-        lon2 = (lon2+ 3*Math.PI) % (2*Math.PI) - Math.PI;
-        return new Pair(Math.toDegrees(lat2), Math.toDegrees(lon2));
-    }
-
-    public static void DefineGeneration(double second) throws Exception {
-        int rules_total = rules.size();
-
-        rules.sort(Comparator.comparing(GenerationRule::getIntensity));
-        Collections.reverse(rules);
-
-        if (second%1 == 0){
-            System.out.println("Second: " + second/10);
-            System.out.println("Cars generated: " + Cars.size());
-            System.out.println("Rules size: " + rules_total);
-            //We have to generate n cars. What we do is select a rule
-            //and pass it to another method for processing n times
-            Random rand = new Random();
-            int n = rand.nextInt(rules_total)+1;
-            //System.out.println("generated number: " + n);
-            for(int i = 0; i <=n; i++){
-                System.out.println("I'm here");
-                GenerationRule rule = selectRule();
-                TrueGenerateCar(rule);
+    public static void ExecuteEpochGeneration(ConfigurationData configurationData) {
+        if(Cars.size() < 50){
+            int cars = (int) totalIntensity/2;
+            for(int j = 0; j < cars; j++){
+                Random rand = new Random();
+                int size = randomizingList.size();
+                int index = rand.nextInt(size-1);
+                String chosenSourcePointHash = randomizingList.get(index);
+                GenerationRule rule = getRuleByHash(chosenSourcePointHash, configurationData.generationRules);
+                DefaultNode start_node = getNodeByLatLongGroup(rule.startLatitude, rule.startLongitude, rule.startGroupId);
+                DefaultNode end_node = getNodeByLatLongGroup(rule.endLatitude, rule.endLongitude, rule.endGroupId);
+                GenerateCar(start_node, end_node, rule);
             }
         }
+        else{
+            System.out.println("Too many cars to generate a new one");
+        }
     }
 
-    public static GenerationRule selectRule(){
-        //We select a number between 1 and 10 BUT
-        //It tends to be lower(Meaning that the
-        // index is smaller and a rule with a bigger intensity is more likely to be chosen)
-        if(rules.size() > 1) {
-            int num = (int) (Math.pow(Math.floor(Math.random() * 10), 2)) / (100 / rules.size());
-            return rules.get(num);
+    public static DefaultNode getNodeByLatLongGroup(double latitude, double longitude, long groupId){
+        ArrayList<DefaultNode> InnerNodesCollection = new ArrayList<>();
+        ArrayList<DefaultNode> OuterNodesCollection = new ArrayList<>();
+        for (DefaultNode allNode : AllNodes) {
+            if (allNode instanceof InnerNode && String.valueOf(groupId).equals(allNode.group_id)) {
+                InnerNodesCollection.add(allNode);
+            } else if (allNode instanceof OuterNode && String.valueOf(groupId).equals(allNode.group_id)) {
+                OuterNodesCollection.add(allNode);
+            }
         }
-        else{
-            return rules.get(0);
+        for (DefaultNode defaultNode : InnerNodesCollection) {
+            double latC = defaultNode.latitude;
+            double longC = defaultNode.longitude;
+            if (areCoordinatesMatched(latC, longC, latitude, longitude)) {
+                return defaultNode;
+            }
         }
+        for (DefaultNode defaultNode : OuterNodesCollection) {
+            double latC = defaultNode.latitude;
+            double longC = defaultNode.longitude;
+            if (areCoordinatesMatched(latC, longC, latitude, longitude)) {
+                return defaultNode;
+            }
+        }
+        return null;
+    }
+
+    public static boolean areCoordinatesMatched(double lat1, double long1, double lat2, double long2){
+        ArrayList<Double> coordinates = new ArrayList<>();
+        coordinates.add(lat1);
+        coordinates.add(long1);
+        coordinates.add(lat2);
+        coordinates.add(long2);
+        int minSymbolsNumber = getMinSymbolAmount(coordinates)-1;
+        String latCFormatted = getSymbolsBeforeDot(lat1) + "." + getNSymbolsAfterDot(lat1, minSymbolsNumber);
+        String longCFormatted = getSymbolsBeforeDot(long1) + "." + getNSymbolsAfterDot(long1, minSymbolsNumber);
+        String latitudeMatch = getSymbolsBeforeDot(lat2) + "." + getNSymbolsAfterDot(lat2, minSymbolsNumber);
+        String longitudeMatch = getSymbolsBeforeDot(long2) + "." + getNSymbolsAfterDot(long2, minSymbolsNumber);
+        return latCFormatted.equals(latitudeMatch) && longCFormatted.equals(longitudeMatch);
+    }
+
+    public static int getMinSymbolAmount(ArrayList<Double> coordinates){
+        int min = Integer.MAX_VALUE;
+        for (Double coordinate : coordinates) {
+            String numberString = Double.toString(coordinate);
+            int decimalPlaces = numberString.length() - numberString.indexOf('.') - 1;
+            if (decimalPlaces < min) {
+                min = decimalPlaces;
+            }
+        }
+        return min;
+    }
+
+    public static String getSymbolsBeforeDot(double input){
+        String value = String.valueOf(input);
+        int dotIndex = value.indexOf('.');
+        if (dotIndex != -1) {
+            return value.substring(0, dotIndex);
+        }
+        return value;  // If no dot is found, return the original string
+    }
+
+    public static String getNSymbolsAfterDot(double number, int n) {
+        String numberS = String.valueOf(number);
+        String regex = "\\.(\\d{" + n + "})";
+        Pattern pattern = Pattern.compile(regex);
+        Matcher matcher = pattern.matcher(numberS);
+
+        if (matcher.find()) {
+            return matcher.group(1);
+        }
+
+        return "";
+    }
+
+    public static GenerationRule getRuleByHash(String hash, ArrayList<GenerationRule> rules){
+        for (GenerationRule rule : rules) {
+            if (hash.equals(rule.hash_id)) {
+                return rule;
+            }
+        }
+        return new GenerationRule();
     }
 
     public static void WriteToJSON(Vehicle car, int second){
         JSONObject frameDetails = new JSONObject();
-
         frameDetails.put("car", car.id);
         frameDetails.put("lat", car.latitude);
         frameDetails.put("lon", car.longitude);
         frameDetails.put("angle", car.angle);
-
         JSONArray positions = new JSONArray();
-        //positions.add("frame: " + second);
         positions.add(frameDetails);
-
         JSONObject object = new JSONObject();
         object.put("positions", positions);
-
         JSONObject frame = new JSONObject();
         frame.put("frame", second);
         frame.put("positions", positions);
-
         frames.add(frame);
     }
 
     public static void createPositionReport(int second, int frame_number){
         JSONArray positions = new JSONArray();
-        for(int i = 0; i < Cars.size(); i++){
+        for (Vehicle car : Cars) {
             JSONObject frameDetails = new JSONObject();
-            frameDetails.put("type", Cars.get(i).toString());
-            frameDetails.put("lat", Cars.get(i).latitude);
-            frameDetails.put("lon", Cars.get(i).longitude);
-            frameDetails.put("angle", Cars.get(i).angle);
+            frameDetails.put("type", car.toString());
+            frameDetails.put("lat", car.latitude);
+            frameDetails.put("lon", car.longitude);
+            frameDetails.put("angle", car.angle);
             positions.add(frameDetails);
         }
         JSONObject object = new JSONObject();
@@ -821,27 +1092,42 @@ public class Generator {
         frames.add(frame);
     }
 
-    public static void CaptureConnections(){
-        for(int i = 0; i < NodeGroups.size(); i++){
-            Pair coordinates = new Pair(NodeGroups.get(i).Nodes.get(NodeGroups.get(i).Nodes.size()-1).latitude,
-                    NodeGroups.get(i).Nodes.get(NodeGroups.get(i).Nodes.size()-1).longitude);
-            ArrayList<OuterConnection> outer_conn = new ArrayList<OuterConnection>();
-            //outer_conn = NodeGroups.get(i).Nodes.get(NodeGroups.get(i).Nodes.size()-1).outer_connections;
-            //Now we check fot connections
-            for(int j = 0; j < AllNodes.size(); j++){
-                if(AllNodes.get(j) instanceof InnerNode && AllNodes.get(j).latitude == coordinates.latitude &&
-                        AllNodes.get(j).longitude == coordinates.longitude){
-                    outer_conn.add(new OuterConnection(AllNodes.get(j).group_id, AllNodes.get(j).id));
-                    System.out.println("Connection added");
-                }
+    public static void createPositionReportVisual(int second, int frame_number){
+        String color = "";
+        String name = "";
+        for (Vehicle car : Cars) {
+            JSONObject frameDetails = new JSONObject();
+            if (car.toString().equals("Truck")) {
+                color = "red";
+                name = "Truck";
+            } else if (car.toString().equals("Sedan")) {
+                color = "blue";
+                name = "Sedan";
+            } else {
+                color = "green";
+                name = "Van";
             }
-            NodeGroups.get(i).Nodes.get(NodeGroups.get(i).Nodes.size()-1).setOuter_connections(outer_conn);
+            try {
+                FileWriter myWriter = new FileWriter("files\\framesVisual.csv", true);
+                if (num == 0) {
+                    String names = "lat,long,type,frame,angle" + "\n";
+                    myWriter.write(names);
+                    myWriter.close();
+                }
+                num++;
+                String text = car.longitude + "," + car.latitude + "," + name + "," + frame_number +
+                        "," + car.angle + "\n";
+                System.out.println(text);
+                myWriter.write(text);
+                myWriter.close();
+            } catch (IOException e) {
+                System.out.println("An error occurred.");
+                e.printStackTrace();
+            }
         }
     }
-    
 
     public static void SaveJSON(){
-        //"../.data/maps/simple_map/anim/frames.json"
         JSONObject total = new JSONObject();
         total.put("framerate", 10);
         JSONArray types = new JSONArray();
@@ -856,14 +1142,14 @@ public class Generator {
         types.add(type3);
         total.put("types", types);
         total.put("frames", frames);
-        try (FileWriter file = new FileWriter("../.data/maps/test_map/anim/out/frames.json")) {
+        try (FileWriter file = new FileWriter("files\\frames.json")) {
             //We can write any JSONArray or JSONObject instance to the file
             System.out.println("Write");
             file.write(total.toJSONString());
             file.flush();
-
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
+
 }

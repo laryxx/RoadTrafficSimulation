@@ -67,10 +67,6 @@ weight in kilograms, distance to next node, progress since last node in kilomete
 latitude, longitude, angle) – represents a vehicle.
 Vehicle abstract class – contains the above constructor.
 
-Graph-related classes
-Edge (source, destination, source id, destination id) – represents an edge in a graph and contains both graph id connections and node id connections.
-Graph (edges, edge count) – represents a graph.
-
 GUI-related classes
 GenerationRulesGUI – used for receiving input regarding generation rules from the user.
 ViewRulesGUI – used for viewing and/or removing already existing generation rules

@@ -5,13 +5,12 @@ int id;
 int start_node_id;
 int destination_node_id;
 ArrayList<DefaultNode> path;
-Intent intent;
 double speed;
-double path_distance_in_km;
+double path_distance_in_m;
 int last_visited_node_id;
-double progress_in_km;
-double distance_to_next_node;
-double progress_since_last_node_in_km;
+double progress_in_m;
+double distance_to_next_node_in_m;
+double progress_since_last_node_in_m;
 double fitting_speed;
 double sum_of_node_distances;
 double latitude;
@@ -29,35 +28,51 @@ int group_nodes_left;
 //In m/s^2
 double acceleration_rate;
 
+ArrayList<Pair> distanceData;
+
+//NEW
+int lastVisitedNodeIndexInPath;
+
+String intent;
+
+ArrayList<Integer> preTurnNodes;
+
+double deceleration_rate;
+
+double brakingDistance;
+
     public Vehicle() {
 
     }
 
-    //Any vehicle
-    public Vehicle(int id, int start_mode_id, int destination_node_id, ArrayList<DefaultNode> path, Intent intent,
-                   double speed, double path_distance_in_km, int last_visited_node_id, double progress_in_km,
-                   int weight_in_kg, double distance_to_next_node, double progress_since_last_node_in_km,
-                   double fitting_speed, int group_nodes_left, double sum_of_node_distances, double acceleration_rate,
-                   double latitude, double longitude, double angle) {
+    public Vehicle(int id, ArrayList<DefaultNode> path, int lastVisitedNodeIndexInPath, String intent, double speed,
+                   double fitting_speed, double acceleration_rate, double latitude, double longitude,
+                   double progress_in_m, double path_distance_in_m, ArrayList<Pair> distanceData,
+                   ArrayList<Integer> preTurnNodes, double deceleration_rate, double angle){
         this.id = id;
-        this.start_node_id = start_mode_id;
-        this.destination_node_id = destination_node_id;
         this.path = path;
+        this.lastVisitedNodeIndexInPath = lastVisitedNodeIndexInPath;
         this.intent = intent;
         this.speed = speed;
-        this.path_distance_in_km = path_distance_in_km;
-        this.last_visited_node_id = last_visited_node_id;
-        this.progress_in_km = progress_in_km;
-        this.weight_in_kg = weight_in_kg;
-        this.distance_to_next_node = distance_to_next_node;
-        this.progress_since_last_node_in_km = progress_since_last_node_in_km;
         this.fitting_speed = fitting_speed;
-        this.group_nodes_left = group_nodes_left;
-        this.sum_of_node_distances = sum_of_node_distances;
         this.acceleration_rate = acceleration_rate;
         this.latitude = latitude;
         this.longitude = longitude;
+        this.progress_in_m = progress_in_m;
+        this.path_distance_in_m = path_distance_in_m;
+        this.distanceData = distanceData;
+        this.preTurnNodes = preTurnNodes;
+        this.deceleration_rate = deceleration_rate;
+        this.brakingDistance = CalculateBrakingDistanceByDecelerationSpeedAndSpeed(this.deceleration_rate,
+                60.0, 30.0);
         this.angle = angle;
+    }
+
+    public static double CalculateBrakingDistanceByDecelerationSpeedAndSpeed(double decelerationSpeed,
+                                                                              double currentSpeed, double targetSpeed){
+        double currentSpeedConverted = currentSpeed/3.6;
+        double targetSpeedConverted = currentSpeed/3.6;
+        return ((targetSpeedConverted*targetSpeedConverted) - (currentSpeedConverted*currentSpeedConverted))/2*decelerationSpeed;
     }
 
     public void setId(int id) {
@@ -92,11 +107,11 @@ double acceleration_rate;
         return  path;
     }
 
-    public void setIntent(Intent intent) {
+    public void setIntent(String intent) {
         this.intent = intent;
     }
 
-    public Intent getIntent(){
+    public String getIntent(){
         return intent;
     }
 
@@ -109,11 +124,11 @@ double acceleration_rate;
     }
 
     public void setPath_distance_in_km(double path_distance_in_km) {
-        this.path_distance_in_km = path_distance_in_km;
+        this.path_distance_in_m = path_distance_in_km;
     }
 
     public double getPath_distance_in_km() {
-        return path_distance_in_km;
+        return path_distance_in_m;
     }
 
     public void setLast_visited_node_id(int last_visited_node_id) {
@@ -124,12 +139,12 @@ double acceleration_rate;
         return last_visited_node_id;
     }
 
-    public void setProgress_in_km(double progress_in_km) {
-        this.progress_in_km = progress_in_km;
+    public void setProgress_in_m(double progress_in_m) {
+        this.progress_in_m = progress_in_m;
     }
 
-    public double getProgress_in_km() {
-        return progress_in_km;
+    public double getProgress_in_m() {
+        return progress_in_m;
     }
 
     public void setWeight_in_kg(int weight_in_kg) {
@@ -140,20 +155,12 @@ double acceleration_rate;
         return weight_in_kg;
     }
 
-    public void setDistance_to_next_node(double distance_to_next_node) {
-        this.distance_to_next_node = distance_to_next_node;
-    }
-
-    public double getDistance_to_next_node() {
-        return distance_to_next_node;
-    }
-
-    public void setProgress_since_last_node_in_km(double progress_since_last_node_in_km) {
-        this.progress_since_last_node_in_km = progress_since_last_node_in_km;
+    public void setProgress_since_last_node_in_m(double progress_since_last_node_in_m) {
+        this.progress_since_last_node_in_m = progress_since_last_node_in_m;
     }
 
     public double getProgress_since_last_node_in_km() {
-        return progress_since_last_node_in_km;
+        return progress_since_last_node_in_m;
     }
 
     public void setLoop_reset_node_id(int loop_reset_node_id) {
@@ -219,4 +226,21 @@ double acceleration_rate;
     public double getAngle() {
         return angle;
     }
+
+    public void setLastVisitedNodeIndexInPath(int lastVisitedNodeIndexInPath) {
+        this.lastVisitedNodeIndexInPath = lastVisitedNodeIndexInPath;
+    }
+
+    public void setDistanceData(ArrayList<Pair> distanceData) {
+        this.distanceData = distanceData;
+    }
+
+    public ArrayList<Pair> getDistanceData() {
+        return distanceData;
+    }
+
+    public int getLastVisitedNodeIndexInPath() {
+        return lastVisitedNodeIndexInPath;
+    }
+
 }

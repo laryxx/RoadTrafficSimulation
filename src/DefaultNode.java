@@ -4,9 +4,9 @@ public abstract class DefaultNode {
     int id;
     double latitude;
     double longitude;
-    int connection_id;
     String group_id;
     ArrayList<OuterConnection> outer_connections;
+    ArrayList<Integer> connections;
     int graph_id;
 
     public DefaultNode(){
@@ -14,42 +14,27 @@ public abstract class DefaultNode {
     }
 
     //OuterNode
-    public DefaultNode(int id, double latitude, double longitude, String group_id, ArrayList<OuterConnection> outer_connections, int graph_id) {
+    public DefaultNode(int id, double latitude, double longitude, String group_id,
+                       ArrayList<OuterConnection> outer_connections, ArrayList<Integer> connections, int graph_id) {
         this.id = id;
         this.latitude = latitude;
         this.longitude = longitude;
         this.group_id = group_id;
         this.outer_connections = outer_connections;
+        this.connections = connections;
         this.graph_id = graph_id;
     }
 
-    //EndNode
-//    public DefaultNode(int id, double latitude, double longitude, String group_id, int graph_id) {
-//        this.id = id;
-//        this.latitude = latitude;
-//        this.longitude = longitude;
-//        this.group_id = group_id;
-//        this.graph_id = graph_id;
-//    }
-
     //InnerNode
-    public DefaultNode(int id, double latitude, double longitude, int connection_id, String group_id, int graph_id) {
+    public DefaultNode(int id, double latitude, double longitude, String group_id, ArrayList<Integer> connections,
+                       int graph_id) {
         this.id = id;
         this.latitude = latitude;
         this.longitude = longitude;
-        this.connection_id = connection_id;
+        this.connections = connections;
         this.group_id = group_id;
         this.graph_id = graph_id;
     }
-
-    //LoneNode
-//    public DefaultNode(int id,  ArrayList<OuterConnection> outer_connections, double latitude, double longitude, int graph_id){
-//        this.id = id;
-//        this.outer_connections = outer_connections;
-//        this.latitude = latitude;
-//        this.longitude = longitude;
-//        this.graph_id = graph_id;
-//    }
 
     public void setId(int id) {
         this.id = id;
@@ -75,14 +60,6 @@ public abstract class DefaultNode {
         return longitude;
     }
 
-    public void setConnection_id(int connection_id){
-        this.connection_id = connection_id;
-    }
-
-    public int getConnection_id(){
-        return connection_id;
-    }
-
     public void setGroup_id(String group_id){
         this.group_id = group_id;
     }
@@ -105,5 +82,13 @@ public abstract class DefaultNode {
 
     public int getGraph_id() {
         return graph_id;
+    }
+
+    public void setConnections(ArrayList<Integer> connections) {
+        this.connections = connections;
+    }
+
+    public ArrayList<Integer> getConnections() {
+        return connections;
     }
 }
