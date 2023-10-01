@@ -19,8 +19,6 @@ from kivy_garden.mapview import MapMarker, MapView
 import sys
 from kivy.graphics import Line
 from kivy.uix.widget import Widget
-
-# Config.set('input', 'mouse', 'mouse,multitouch_on_demand')
 Builder.load_file('testdesign1.kv')
 import requests
 from bs4 import BeautifulSoup
@@ -45,11 +43,6 @@ def print_concise_generation_rule_data(source_point):
 
 
 def set_coordinates_by_accessing_instance(lat, long):
-    # MyLayout.ids.new_source_point_lat.text = "Lat: " + str(lat)[:8]
-    # MyLayout.ids.new_source_point_long.text = "Long: " + str(long)[:8]
-    # print(f"AAAAAAAAA {float(lat)}" )
-    # MyLayout.current_new_source_point_lat = float(lat)
-    # MyLayout.current_new_source_point_long = float(long)
     if my_layout_instance is not None:
         my_layout_instance.set_new_source_point_coordinates(lat, long)
 
@@ -108,42 +101,6 @@ def is_source_point_data_satisfactory(vans, trucks, sedans, start_lat, start_lon
     return True
 
 
-# def is_source_point_data_satisfactory(vans, trucks, sedans, lat, long, cars, name, road_lat, road_long):
-#     # Check for at least one active checkbox
-#     if vans is False and trucks is False and sedans is False:
-#         # TODO
-#         # make an alert instead of terminal print
-#         print("At least one car type checkbox must be active")
-#         return False
-#     # Check for correctness of coordinate values
-#     if lat is None or long is None or lat == 0.0 or long == 0.0:
-#         # TODO
-#         # make an alert instead of terminal print
-#         print(f"Invalid coordinates: {lat}, {long}")
-#         return False
-#     # Check for appropriate source point name length
-#     if (12 > len(name) > 2) is False:
-#         print(f"Name {name} is too long or too short")
-#         return False
-#     # Check foe appropriate cars per epoch number
-#     if cars < 1 or cars > 5:
-#         print("Invalid number of cars per epoch")
-#         return False
-#     # Check for distance to nearest road
-#     if not is_distance_to_nearest_road_satisfactory(lat, long):
-#         print("point is too far away from a road")
-#         return False
-#     # Check if the road node is not already occupied
-#     if not is_road_node_free(road_lat, road_long):
-#         print("Road point is already occupied. Please select a different area")
-#         return False
-#     # Check if the name is unique
-#     if name in my_layout_instance.source_point_names:
-#         print("Name is already taken")
-#         return False
-#     return True
-
-
 def is_road_node_free(road_node_lat, road_node_long):
     pair = (road_node_lat, road_node_long)
     if pair not in my_layout_instance.taken_node_coordinate_pairs:
@@ -174,38 +131,6 @@ def is_float(value):
         return True
     except ValueError:
         return False
-
-# OLD
-# def generate_output_json_file(source_points, daytime, duration, bbox):
-#     name = "Settings1"
-#     bottom_left_lat = bbox[0]
-#     bottom_left_long = bbox[1]
-#     top_right_lat = bbox[2]
-#     top_right_long = bbox[3]
-#     hash_id = create_composite_hash(name, bottom_left_lat, bottom_left_long, top_right_lat, top_right_long,
-#                                     source_points[0].name, source_points[0].name, source_points[0].lat,
-#                                     source_points[0].long, source_points[0].cars)
-#     source_points_dict = [point.to_dict() for point in source_points]
-#     data = {
-#         "data": {
-#             "identifiers": {
-#                 "name": name,
-#                 "hash": hash_id
-#             },
-#             "simulation_settings": {
-#                 "daytime": daytime,
-#                 "bottom_left_lat": bottom_left_lat,
-#                 "bottom_left_long": bottom_left_long,
-#                 "top_right_lat": top_right_lat,
-#                 "top_right_long": top_right_long,
-#                 "duration": duration
-#             },
-#             "source_points": source_points_dict
-#         }
-#     }
-#     with open("files\\config.json", "w") as file:
-#         json.dump(data, file, indent=4)
-#     sys.exit()
 
 
 # NEW
@@ -337,54 +262,6 @@ class GenerationRule:
         }
 
 
-# class SourcePoint:
-#     vans = False
-#     trucks = False
-#     sedans = False
-#     lat = 0.0
-#     long = 0.0
-#     cars = 0
-#     name = ""
-#     road_node_lat = 0.0
-#     road_node_long = 0.0
-#     hash_id = ""
-#
-#     def __init__(self, vans, trucks, sedans, lat, long, cars, name, road_node_lat, road_node_long):
-#         self.vans = vans
-#         self.trucks = trucks
-#         self.sedans = sedans
-#         self.lat = lat
-#         self.long = long
-#         self.cars = cars
-#         self.name = name
-#         self.road_node_lat, self.road_node_long = road_node_lat, road_node_long
-#         self.hash_id = create_composite_hash(self.lat, self.long, self.road_node_lat, self.road_node_long,
-#                                              self.name)
-#
-#     def print_data(self):
-#         print(f"\n ------ {self.name} source point data ------ \n\n")
-#         print(f"Vans: {self.vans} \n"
-#               f"Trucks: {self.trucks} \n"
-#               f"Sedans: {self.sedans} \n"
-#               f"Click Latitude: {self.lat} \n"
-#               f"Click Longitude: {self.long} \n"
-#               f"Assigned road node latitude: {self.road_node_lat} \n"
-#               f"Assigned road node longitude: {self.road_node_long} \n"
-#               f"Cars per epoch: {self.cars} \n")
-#
-#     def to_dict(self):
-#         return {
-#             "name": self.name,
-#             "lat": self.road_node_lat,
-#             "long": self.road_node_long,
-#             "vans": self.vans,
-#             "trucks": self.trucks,
-#             "sedans": self.sedans,
-#             "intensity": self.cars,
-#             "hash_id": self.hash_id
-#         }
-
-
 def create_composite_hash(*args):
     combined_data = "".join(str(arg) for arg in args)
     sha256_hash = hashlib.sha256()
@@ -447,18 +324,6 @@ class EndMarker(ButtonBehavior, Image):
             self._layer = None
 
 
-# class LineWidget(Widget):
-#     def __init__(self, point1, point2, **kwargs):
-#         super(LineWidget, self).__init__(**kwargs)
-#         self.point1 = point1
-#         self.point2 = point2
-#
-#     def on_size(self, *args):
-#         self.canvas.clear()
-#         with self.canvas:
-#             Line(points=[self.point1[0], self.point1[1], self.point2[0], self.point2[1]])
-
-
 class MyLayout(Widget):
 
     def __init__(self, **kwargs):
@@ -490,16 +355,8 @@ class MyLayout(Widget):
 
     taken_node_coordinate_pairs = []
 
-    # OLD
-    #source_points = []
-
-    # NEW
     generation_rules = []
 
-    # OLD
-    #marker = None
-
-    # NEW
     markers = []
 
     # Checkbox values
@@ -522,24 +379,6 @@ class MyLayout(Widget):
     # All node groups on current map area
     node_groups = []
 
-    #OLD
-    # def print_all_data_regarding_source_points(self):
-    #     print("+--Current data defined--+")
-    #     print("--source point names: ")
-    #     for index, name in enumerate(self.source_point_names):
-    #         print(f"{index}) {name}")
-    #     print("----------------------\n")
-    #     print("--taken node coordinate pairs: ")
-    #     for index, pair in enumerate(self.taken_node_coordinate_pairs):
-    #         print(f"{index}) {pair}")
-    #     print("--------------------------------\n")
-    #     print("source points: ")
-    #     for index, point in enumerate(self.source_points):
-    #         print(f"{index}) {point.name}")
-    #         print_concise_gene_point_data(point)
-    #     print("+------------------------+")
-
-    #NEW
     def print_all_data_regarding_generation_rules(self):
         print("+--Current data defined--+")
         print("--generation rules names: ")
@@ -648,10 +487,6 @@ class MyLayout(Widget):
         self.node_groups = []
         self.spinner_options = []
         self.taken_node_coordinate_pairs = []
-        #OLD
-        # self.source_point_names = []
-        # self.source_points = []
-        #NEW
         self.generation_rules = []
         self.generation_rules_names = []
 
@@ -665,21 +500,6 @@ class MyLayout(Widget):
             self.center_on(lat, long)
         else:
             print("Please enter a numeric floating point (e.x. 12.345) value")
-
-    # OLD
-    # def show_selected_point_on_map(self):
-    #     print("show_selected_point_on_map Called")
-    #     value = self.ids.select_defined_point_spinner.text
-    #     point_name = value.split(":")[0].strip()
-    #     for point in self.source_points:
-    #         if point_name == point.name:
-    #             print(f"Point found: {point.road_node_lat}, {point.road_node_long}")
-    #             if my_mapview_instance.marker:
-    #                 my_mapview_instance.remove_a_marker()
-    #             # Defining new marker
-    #             my_mapview_instance.add_a_marker(point.road_node_lat, point.road_node_long)
-    #             # self.CustomMapView.marker = MapMarker(lat=point.road_node_lat, lon=point.road_node_long)
-    #             # mapview.add_marker(self.marker)
 
     # NEW
     def show_selected_generation_rule_on_map(self):
@@ -697,16 +517,7 @@ class MyLayout(Widget):
                 start_marker = StartMarker(lat=lat1, lon=long1)
                 end_marker = EndMarker(lat=lat2, lon=long2)
                 my_mapview_instance.change_markers(start_marker, end_marker)
-                # my_mapview_instance.remove_all_markers()
-                # my_mapview_instance.markers.append(start_marker)
-                # my_mapview_instance.add_marker(start_marker)
-                # my_mapview_instance.markers.append(end_marker)
-                # my_mapview_instance.add_marker(end_marker)
-                # if len(my_mapview_instance.markers) > 0:
-                #     for marker in my_mapview_instance.markers:
-                #         my_mapview_instance.remove_all_markers()
-                # # Defining new marker
-                # my_mapview_instance.add_a_marker(rule.road_node_lat, rule.road_node_long)
+
 
     def fill_coordinates(self):
         mapview = self.ids.mapview
@@ -714,16 +525,7 @@ class MyLayout(Widget):
         self.ids.map_new_center_on_coordinates_latitude.text = lat
         self.ids.map_new_center_on_coordinates_longitude.text = long
 
-    #OLD
-    # def update_spinner_point_list(self):
-    #     self.spinner_options.clear()
-    #     for point in self.source_points:
-    #         lat = str(point.road_node_lat)[:8]
-    #         long = str(point.road_node_long)[:8]
-    #         value = f"{str(point.name)}: {lat}, {long}"
-    #         self.spinner_options.append(value)
 
-    #NEW
     def update_spinner_point_list(self):
         self.spinner_options.clear()
         for rule in self.generation_rules:
@@ -769,17 +571,7 @@ class MyLayout(Widget):
     def slider_new_source_point_cars_per_epoch_triggered(self, *args):
         self.slider_cars_per_epoch_text.text = "Cars per epoch: " + str(int(args[1]))
 
-    #OLD
-    # def remove_point_button_clicked(self):
-    #     text = self.ids.select_defined_point_spinner.text
-    #     print("Removing: " + text)
-    #     name = text.split(":")[0]
-    #     for point in self.source_points:
-    #         if point.name == name:
-    #             self.source_points.remove(point)
-    #     self.update_spinner_point_list()
 
-    #NEW
     def remove_point_button_clicked(self):
         text = self.ids.select_defined_point_spinner.text
         print("Removing: " + text)
@@ -789,36 +581,6 @@ class MyLayout(Widget):
                 self.generation_rules.remove(rule)
         self.update_spinner_point_list()
 
-    # OLD
-    # This method shall add the previously defined data as a member of collection of defined source points
-    # def add_point_button_clicked(self):
-    #     # Collected data:
-    #     # 1 - all 3 checkbox values
-    #     # 2 - coordinates of the marker
-    #     # 3 - new source point name
-    #     # 4 - cars per epoch label/slider value
-    #     # Create a new marker at the specified location
-    #     self.print_all_data_regarding_source_points()
-    #     checkbox_vans = self.vans_clicked
-    #     checkbox_trucks = self.trucks_clicked
-    #     checkbox_sedans = self.sedans_clicked
-    #     lat = float(self.current_new_source_point_lat)
-    #     long = float(self.current_new_source_point_long)
-    #     name = str(self.ids.new_source_point_name_text_input.text)
-    #     cars = int(str(self.slider_cars_per_epoch_text.text)[16:])
-    #     road_lat, road_long = self.find_nearest_road_node(lat, long)
-    #     if is_source_point_data_satisfactory(checkbox_vans, checkbox_trucks, checkbox_sedans, lat, long, cars, name,
-    #                                          road_lat, road_long):
-    #         self.source_point_names.append(name)
-    #         source_point = SourcePoint(checkbox_vans, checkbox_trucks, checkbox_sedans, lat, long, cars, name, road_lat,
-    #                                    road_long)
-    #         self.taken_node_coordinate_pairs.append((source_point.road_node_lat, source_point.road_node_long))
-    #         self.source_points.append(source_point)
-    #         self.update_spinner_point_list()
-    #         #print_source_point_data(True, mapview, checkbox_vans, checkbox_trucks, checkbox_sedans, lat, long, name, cars)
-    #     else:
-    #         print("...")
-    #         pass
 
     def add_point_button_clicked(self):
         self.print_all_data_regarding_generation_rules()
@@ -860,21 +622,13 @@ class MyLayout(Widget):
             image_path = "images\\end3.png"
             self.markers = []
 
-        # marker = MapMarker(lat=7.11, lon=16.44)
 
         def get_bounding_box(self):
             mapview = MapView
             return mapview.get_bbox(self)
 
-        # def remove_a_marker(self):
-        #     mapview = MapView
-        #     mapview.remove_marker(self, self.marker)
 
         def remove_oldest_marker(self):
-            # print("remove_oldest_markers called")
-            # mapview = MapView
-            # mapview.remove_marker(self, self.markers[0])
-            # self.markers.pop()
             if len(self.markers) > 2:
                 oldest_marker = self.markers.pop(0)
                 mapview = MapView
@@ -892,11 +646,6 @@ class MyLayout(Widget):
             self.markers.clear()
 
         def add_a_marker(self, marker):
-            # mapview = MapView
-            # # marker = MapMarker(lat=lat, lon=long)
-            # self.markers.append(marker)
-            # self.remove_oldest_marker()
-            # mapview.add_marker(self, marker)
             pass
 
         def change_markers(self, start_marker, end_marker):
@@ -919,18 +668,7 @@ class MyLayout(Widget):
             mapview.add_marker(self, start_marker)
             mapview.add_marker(self, end_marker)
 
-        # def add_a_line(self, lat1, long1, lat2, long2):
-        #     line_widget = LineWidget(point1=(lat1, long1), point2=(lat2, long2))
-        #     self.add_marker(line_widget)
-
         def on_touch_down(self, touch):
-            # print("XXXXXXXX")
-            # print(touch[0], touch[1])
-            # print(touch)
-            # if touch.is_double_tap:
-            #     # Ignore double-tap events
-            #     return False
-
             mapview = MapView
 
             # Checking if the touch event is within the bounds of MapView
@@ -944,15 +682,6 @@ class MyLayout(Widget):
             if lat is None or lon is None:
                 return False
 
-            # Removing a marker if it already exists
-            # if self.marker:
-            #     mapview.remove_marker(self, self.marker)
-
-            # Defining new marker
-            # self.marker = MapMarker(lat=lat, lon=lon)
-            # mapview.add_marker(self, self.marker)
-
-            # self.marker = MapMarker(lat=lat, lon=lon)
 
             if len(self.markers) < 1:
                 marker = StartMarker(lat=float(lat), lon=float(lon))
@@ -967,26 +696,13 @@ class MyLayout(Widget):
                 self.replace_marker(marker)
 
             print(f"Number of markers: {len(self.markers)}")
-            # marker = CustomMarker(lat=float(lat), lon=float(lon), image_path=image_path)
-            #
-            # self.add_a_marker(marker)
 
             # Printing marker coordinates
             print(f"Lat: {str(lat)}, Long: {str(lon)}")
 
-            # Updating current new source coordinates
-            # self.parent.set_new_source_point_coordinates(str(lat), str(lon))
-
-            # super(MyLayout.CustomMapView, self).set_new_source_point_coordinates(str(lat), str(lon))
-
             parent_obj = self.parent
             par = mapview.parent
             print(parent_obj)
-            # mapview.parent.ids.new_source_point_lat.text = "Lat: " + str(lat)[:8]
-            # mapview.parent.ids.new_source_point_long.text = "Long: " + str(lon)[:8]
-
-            # par.current_new_source_point_lat = float(lat)
-            # par.current_new_source_point_long = float(lon)
 
             set_coordinates_by_accessing_instance(lat, lon)
 
@@ -1001,9 +717,6 @@ class MyLayout(Widget):
             print(f"duration: {duration}")
             bbox = my_mapview_instance.get_bounding_box()
             print(f"bbox: {bbox}")
-            # for point in self.source_points:
-            #     print_concise_source_point_data(point)
-            # generate_output_json_file(self.source_points, daytime, duration, bbox)
             generate_output_json_file(self.generation_rules, daytime, duration, bbox)
         else:
             print("Daytime not selected")

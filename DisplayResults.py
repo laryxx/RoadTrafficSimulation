@@ -1,6 +1,5 @@
 import os
 import sys
-
 from bs4 import BeautifulSoup
 from kivy.config import Config
 from kivy.uix.behaviors import ButtonBehavior
@@ -12,8 +11,6 @@ from kivy.uix.widget import Widget
 from kivy_garden.mapview import MapMarker, MapView
 from kivy.clock import Clock
 import pandas as pd
-
-#Config.set('input', 'mouse', 'mouse,multitouch_on_demand')
 Builder.load_file('DisplayResults.kv')
 current_frame = 0
 my_layout_instance = None
@@ -33,28 +30,7 @@ def get_car_coordinates_by_frame(frame):
         coordinates.append((lat, lon))
     return coordinates
 
-# def get_car_coordinates_by_frame(frame):
-#     frames_file_exists = os.path.exists('files\\framesVisual.csv')
-#     if not frames_file_exists:
-#         print("Frames output file not found")
-#         sys.exit(0)
-#     df = pd.read_csv('files\\framesVisual.csv')
-#     # print(df)
-#     frame_df = df.loc[(df['frame'] == frame), ['lat', 'long', 'type']]
-#     # print(len(frame_df))
-#     #print(df.iloc[2])
-#     # print(df.iloc[2][0], " ", df.iloc[2][1])
-#     coordinates = []
-#     for i in range(len(frame_df)):
-#         print("Append: ", df.iloc[i][0], " ", df.iloc[i][1])
-#         coordinates.append((df.iloc[i][0], df.iloc[i][1]))
-#     # print(len(coordinates))
-#     # print(coordinates[5])
-#     # print(coordinates[5][0], " ", coordinates[5][1])
-#     #print(frame_df)
-#     return coordinates
 
-# TODO
 def get_bbox():
     osm_file_exists = os.path.exists('files\\schema.osm')
     if not osm_file_exists:
@@ -62,15 +38,10 @@ def get_bbox():
         sys.exit(0)
     soup = BeautifulSoup(open('files\\schema.osm', encoding='utf8'), 'html.parser')
     text = soup.find('bounds')['minlat']
-    # print("TEXT: " + text)
     minlat = float(soup.find('bounds')['minlat'])
     maxlat = float(soup.find('bounds')['maxlat'])
     minlon = float(soup.find('bounds')['minlon'])
     maxlon = float(soup.find('bounds')['maxlon'])
-    # print("MINLAT: ", minlat)
-    # print("MAXLAT: ", maxlat)
-    # print("MINLON: ", minlon)
-    # print("MAXLON: ", maxlon)
     bound_box = (minlat, maxlat, minlon, maxlon)
     print(bound_box)
     return bound_box
@@ -87,8 +58,6 @@ class MyLayout(Widget):
         super(MyLayout, self).__init__(**kwargs)
         global my_layout_instance
         my_layout_instance = self
-        # self.ids.map_new_center_on_coordinates_latitude.text = str(51.98612464170503)
-        # self.ids.map_new_center_on_coordinates_longitude.text = str(17.776237927246086)
         Clock.schedule_once(self.simulate_button_press, 5)
 
     def center_on(self, lat, long):
@@ -101,13 +70,8 @@ class MyLayout(Widget):
 
 
     def restart_ui(self):
-        # lat = str(self.ids.map_new_center_on_coordinates_latitude.text)
-        # long = str(self.ids.map_new_center_on_coordinates_longitude.text)
-
         bbox = get_bbox()
         lat, long = calculate_rectangle_center(bbox[0], bbox[1], bbox[2], bbox[3])
-        # lat = 51.98612464170503
-        # long = 17.776237927246086\
         print(lat, " ", long)
         if is_float(lat) and is_float(long):
             lat = float(lat)
@@ -154,8 +118,6 @@ class MyLayout(Widget):
                 print(i, ": ", coordinates[i][1], " ", coordinates[i][0])
                 lat = float(coordinates[i][1])
                 long = float(coordinates[i][0])
-                # marker = MapMarker(lat=lat, lon=long)
-                # mapview.add_marker(self, marker)
                 self.add_a_marker(lat, long)
 
         def show_next_frame_data(self):
@@ -171,8 +133,6 @@ class MyLayout(Widget):
                 print(i, ": ", coordinates[i][1], " ", coordinates[i][0])
                 lat = float(coordinates[i][1])
                 long = float(coordinates[i][0])
-                # marker = MapMarker(lat=lat, lon=long)
-                # mapview.add_marker(self, marker)
                 self.add_a_marker(lat, long)
 
         def show_frame_data(self):
@@ -188,18 +148,9 @@ class MyLayout(Widget):
                 print(i, ": ", coordinates[i][1], " ", coordinates[i][0])
                 lat = float(coordinates[i][1])
                 long = float(coordinates[i][0])
-                # marker = MapMarker(lat=lat, lon=long)
-                # mapview.add_marker(self, marker)
                 self.add_a_marker(lat, long)
 
         def on_touch_down(self, touch):
-            # print("XXXXXXXX")
-            # print(touch[0], touch[1])
-            # print(touch)
-            # if touch.is_double_tap:
-            #     # Ignore double-tap events
-            #     return False
-
             mapview = MapView
 
             # Checking if the touch event is within the bounds of MapView
@@ -213,39 +164,12 @@ class MyLayout(Widget):
             if lat is None or lon is None:
                 return False
 
-
             # Printing marker coordinates
             print(f"Lat: {str(lat)}, Long: {str(lon)}")
-
-            #coordinates.clear()
-            # coordinates.append((51.98612464170503, 17.776237927246086))
-            # coordinates.pop(0)
-            # coordinates.pop(1)
-            # coordinates.pop(3)
-            # coordinates.pop(4)
-            # coordinates.pop(5)
-            # marker = MapMarker(lat=51.98612464170503, lon=17.776237927246086)
-            # mapview.add_marker(self, marker)
-
-            # marker = MapMarker(lat=51.98540210932437, lon=17.804158200000013)
-            # mapview.add_marker(self, marker)
-
-            # marker = MapMarker(lat=51.964377424878904, lon=17.82688172492741)
-            # mapview.add_marker(self, marker)
-
-            # Updating current new source coordinates
-            # self.parent.set_new_source_point_coordinates(str(lat), str(lon))
-
-            # super(MyLayout.CustomMapView, self).set_new_source_point_coordinates(str(lat), str(lon))
 
             parent_obj = self.parent
             par = mapview.parent
             print(parent_obj)
-            # mapview.parent.ids.new_source_point_lat.text = "Lat: " + str(lat)[:8]
-            # mapview.parent.ids.new_source_point_long.text = "Long: " + str(lon)[:8]
-
-            # par.current_new_source_point_lat = float(lat)
-            # par.current_new_source_point_long = float(lon)
 
             return True
 
