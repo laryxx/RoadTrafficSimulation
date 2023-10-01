@@ -1,0 +1,16 @@
+geojson==3.0.1 <br>
+tqdm==4.65.0 <br>
+beautifulsoup4==4.12.0 <br>
+requests==2.28.2 <br>
+pandas==1.5.3 <br>
+Kivy==2.1.0 <br>
+kivy-deps.angle==0.3.3 <br>
+kivy-deps.glew==0.3.1 <br>
+kivy-deps.sdl2==0.4.5 <br>
+Kivy-Garden==0.1.5 <br>
+kivy-garden.mapview==1.0.6 <br>
+kiwisolver==1.4.4 <br>
+mapview==1.0.6 <br>
+MarkupSafe==2.1.2 <br>
+matplotlib==3.7.1 <br>
+numpy==1.24.2 <br>
