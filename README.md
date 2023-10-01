@@ -50,7 +50,7 @@
   represents the frequency of car generation. Module 1 User Interface is as it 
   is demonstrated below:
   <br> <br>
-  ![Image](Readme_images\module1UI.png)
+  ![Image](/Readme_images/module1UI.png)
   <br><br>
 
   <h3>Module 2 - Traffic flow simulation</h3>
@@ -114,7 +114,7 @@
   different formats. The structure of "framesVisual.csv" file is as it is 
   demonstrated in the figure below:
   <br> <br>
-  ![Image](Readme_images\framesVis.png) 
+  ![Image](/Readme_images/framesVis.png) 
   <br><br>
 
   <h3>Module 3 - Traffic flow animation</h3>
@@ -127,7 +127,7 @@
   cars as markers on the map. Module 3 User Interface is as it is demonstrated 
   on the Figure below:
   <br> <br>
-  ![Image](Readme_images\DisplayResults.png)
+  ![Image](/Readme_images/DisplayResults.png)
   <br><br>
 
 ----
