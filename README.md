@@ -124,12 +124,17 @@ The breakdown of UI elements in module 3 is as it is demonstrated below:
 ----
 
 <h3>External elements</h3>
-* ### [Kivy Framework](https://kivy.org/)
-Kivy is an open-source Python library for developing multitouch applications. We have used Kivy to build the user interface of this program. To learn more about Kivy and to support the project, please visit their [official website](https://kivy.org/).
-* ### [osmtogeojson](https://github.com/tyrasd/osmtogeojson)
-osmtogeojson is a Javascript module for converting OSM data (OSM XML or Overpass JSON) to GeoJSON. It works in the browser, nodejs and can also be used as a command line tool. Learn more by visiting the [website](https://tyrasd.github.io/osmtogeojson/) or the [GitHub page](https://github.com/tyrasd/osmtogeojso).
-* ### [OpenStreetMap](https://www.openstreetmap.org/)
-OSM is an open-source mapping platform that provides detailed and freely accessible geographic information. To learn more about OpenStreetMap and contribute to their community, please visit their [official website](https://www.openstreetmap.org/).
+[Kivy Framework](https://kivy.org/) 
+<br>
+Kivy is an open-source Python library for developing multitouch applications. We have used Kivy to build the user interface of this program. To learn more about Kivy and to support the project, please visit their [official website](https://kivy.org/). 
+<br> <br>
+[osmtogeojson](https://github.com/tyrasd/osmtogeojson) 
+<br>
+osmtogeojson is a Javascript module for converting OSM data (OSM XML or Overpass JSON) to GeoJSON. It works in the browser, nodejs and can also be used as a command line tool. Learn more by visiting the [website](https://tyrasd.github.io/osmtogeojson/) or the [GitHub page](https://github.com/tyrasd/osmtogeojson).
+<br> <br>
+[OpenStreetMap](https://www.openstreetmap.org/) <br>
+OSM is an open-source mapping platform that provides detailed and freely accessible geographic information. To learn more about OpenStreetMap and contribute to their community, please visit their [official website](https://www.openstreetmap.org/). 
+<br> 
 
 ----
 
