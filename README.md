@@ -4,99 +4,25 @@
 
 <h2>Program architecture</h2> 
 <h3> Module 1 - Defining the simulation </h3>
-  Module 1  is responsible for defining all the data that is needed to run the
-  simulation. It fetches the map on which the user must select the coordinates
-  for start and end generation rules, define frequency of car generation on
-  various generation rules as well as select which types of cars should appear
-  where. User may select any region of the map to use, as long as it has roads
-  on it.
+  Module 1 defines essential data for the simulation. It fetches the map from OpenStreetMap, allowing the user to select start and end coordinates, car generation rules, and car types. Any map region with roads can be chosen.
   <br> <br>
-  The map is fetched from OpenStreetMap during the application’s runtime, 
-  therefore allowing the user to select any place available on the service
-  to run the simulation on. When the user has defined all the data necessary
-  to run the simulation, they may press the "Start" button, which launches
-  the process for getting the map file from the aforementioned web service
-  for later use in the next module.
+  Upon defining the data, users can start the process by clicking 'Start.' This fetches the map file from the web service for use in the next module.
   <br> <br>
-  The application uses a number of temporary files for communication between 
-  modules, the first module does not take any preliminary data in, but
-  generates 3 files to be passed on to the next module. Two of them are the
-  map files in ".osm" and ".geojson" format that contain all the road information
-  of the selected map area. The other file is a configuration file that
-  contains all the generations rules defined by the user as well as simulation
-  properties.
-  When user launches the first Module, there is some data that needs to be
-  defined. This subsection describes the purpose of the defined parameters
-  and their functioning. Such data can be divided into two categories - Car
-  generation rules as a collection and general data regarding the simulation
-  itself. The latter category contains such data as selected map bounds, 
-  duration and daytime. Selected map bounds must be stored for the purposes
-  of making requests to OpenStreetMap in order to retrieve map files or
-  get the map-view as a component of the User Interface in the 3rd module.
-  Daytime is not used by the second module, but is a feature to be considered 
-  in the event of further development. Duration represents the amount
-  of time (in minutes) for which the simulation would be carried out. Every
-  second of the simulation is divided into 10 frames. Every set of settings
-  has a name and hash id to include the possibility of future re-use. <br> <br>
-  Generation rules contain many attributes, and some of them may be 
-  self-explanatory by name. Every generation rule has a name and a hash id that
-  the 2nd module uses to refer to, and the start/end group id refer to an id
-  which is used to refer to a collection of nodes as a part of osm/geojson map
-  file structure. The rest are defined by the user. Start latitude and longitude
-  as well as end latitude and longitude attributes represent the start and end
-  point coordinates of a generation rule respectively. Vans, trucks and sedans
-  are boolean values that define which types of cars shall be spawned from
-  a particular location. Intensity is a numerical value from 1-5 that 
-  represents the frequency of car generation. Module 1 User Interface is as it 
-  is demonstrated below:
+  Temporary files facilitate communication between modules. Module 1 generates three files: '.osm' and '.geojson' map files containing road information, and a configuration file with user-defined rules and simulation properties.
   <br> <br>
-  ![Image](/Readme_images/module1UI.png)
+  Data in Module 1 falls into two categories: car generation rules and simulation details. Simulation details include map bounds, duration (in minutes), and daytime settings for potential future use. Generation rules have attributes like name, hash ID for module reference, and start/end group ID for node collections in map files. Other attributes include start/end coordinates, car types (vans, trucks, sedans), and intensity (1-5 for frequency). Module 1 User Interface is as it is demonstrated below:
+  <br> <br>
+  <picture>
+  <img src="https://raw.githubusercontent.com/laryxx/RoadTrafficSimulation/master/Readme_images/module1UI.png"/>
+  </picture>
   <br><br>
 
   <h3>Module 2 - Traffic flow simulation</h3>
-  Module 2 is responsible for running the simulation itself. It is a "backend" 
-  module, which means that the user must use the GUI for displaying
-  the simulation module to analyze the generated results. The data from the
-  previous module is taken and processed, and once that is done the simulation 
-  can start. The results are also stored in 2 temporary files in ".csv" and
-  ".json" formats to allow the further parts of the program to demonstrate the
-  results. 
+  Module 2 is the simulation backend. It processes data from the previous module and runs the simulation. Results are stored in temporary ".csv" and ".json" files.
   <br> <br>
-  The imported map files contain road data in a particular structure, which
-  must be transformed before any sort of path-finding or navigation can be
-  done. This section of the second application module does precisely that.
-  Each node in the initial structure represents a single coordinate on the map - 
-  such coordinates are grouped up to define custom map elements such
-  as roads, forest areas, buildings and many other things. For this application,
-  however, only road nodes are relevant, so they are the only ones
-  imported from OpenStreetMap. The map processing component of the
-  Simulation data generation module transforms this data into its own 
-  system capturing road connections, making it applicable for navigation and
-  path-finding.
+  Map data from the previous module is transformed to capture road connections for navigation. Each node represents a coordinate. The Breadth-First-Search algorithm finds paths between start and end nodes for cars, updating positions in 10 frames per second.
   <br> <br>
-  Each node is its own object stored in memory while the application is running, 
-  and the nodes are grouped to represent roads. Each nodes has its
-  own collection of nodes that it is connected to allow navigating between
-  multiple roads.
-  The Breadth-First-Search path-finding algorithm is used to find a path 
-  between the start and end node each time a new car is generated. This path is
-  then stored for a cat to follow during the traffic flow simulation.
-  <br> <br>
-  Each second of the simulation is divided into 10 frames, and with each
-  frame the positions of all active cars are updated. Each car comes from a
-  specific generation rule, meaning that multiple cars will always have the
-  same start and end point, however roughly half of the cars would have a
-  mid-point assigned to them on their path which they must reach first before
-  continuing to the final node. The Breadth-First-Search algorithm, or
-  the BFS algorithm as it will be referred to further in this paper always 
-  returns the shortest possible route for the cars. The division of some cars
-  heading straight to the goal and others having a random, normally a lot
-  longer path is done to ensure some cars have random and unique paths and
-  to demonstrate that the path-finding and navigation do work as multiple
-  cars will reach their goal and de-spawn.
-  The maximum amount of cars that can exist at once is 50 - this ensures
-  that the growth of program execution time proportional to increase in 
-  simulation duration must is linear.
+  Cars follow paths, with some taking random routes to demonstrate path-finding. Up to 50 cars can exist simultaneously.
   <br> <br>
   In the author’s solution, cars do not interact with each other in any way,
   omitting traffic rules when it comes to intersections, pedestrian crossings
@@ -114,7 +40,9 @@
   different formats. The structure of "framesVisual.csv" file is as it is 
   demonstrated in the figure below:
   <br> <br>
-  ![Image](/Readme_images/framesVis.png) 
+  <picture>
+  <img src="https://raw.githubusercontent.com/laryxx/RoadTrafficSimulation/master/Readme_images/framesVis.png"/>
+  </picture>
   <br><br>
 
   <h3>Module 3 - Traffic flow animation</h3>
@@ -127,20 +55,24 @@
   cars as markers on the map. Module 3 User Interface is as it is demonstrated 
   on the Figure below:
   <br> <br>
-  ![Image](/Readme_images/DisplayResults.png)
+  <picture>
+  <img src="https://raw.githubusercontent.com/laryxx/RoadTrafficSimulation/master/Readme_images/DisplayResults.png"/>
+  </picture>
+  <br><br>
   <br><br>
 
 ----
 
 <h2>User manual</h2>
-Requirements
+<h3>Requirements</h3>
 1) Running a Windows operating system
 2) Being connected to the internet
 3) Having Python 3 installed and set as environment variable
 4) Having Java Runtime Environment installed
 5) Having a copy of the project locally on your device
 6) Having a python virtual environment installed
-7) Installing the following python packages:
+7) Having [osmtogeojson](https://github.com/tyrasd/osmtogeojson) installed and set as environment variable
+8) Installing the following python packages:
 <br>
 (Versions are as used by the author)
 <br>
@@ -160,6 +92,7 @@ mapview==1.0.6 <br>
 MarkupSafe==2.1.2 <br>
 matplotlib==3.7.1 <br>
 numpy==1.24.2 <br>
+
 <h3>Running the program</h3>
 After completing the list of requirements above, that is, 
 copying the project on your Windows local device, initializing a 
@@ -170,36 +103,49 @@ Alternatively, either of the modules can be ran using the command prompt.
 
 ----
 
-<h3>User Interface</h3>
-* __Functionality__
-* __Implementation__
-* __User manual for UI elements__
-
+<h2>User Interface</h2>
+<h3>Functionality</h3>
+The author's UI requirements were simplicity and functionality. This application has a two-module GUI: one defines simulation properties, and the other displays results. Module 1 features controls for defining generation rules on the left and simulation property settings above. The 'Start' button initiates the second module. The map is interactive, with clickable start and finish markers.
+<h3>Implementation</h3>
+All the existing Graphical user interface is done using kivy framework with python. It was chosen by the author because it fit the program’s needs better than some other popular libraries for creating any sort of user interface applications in python. It also has a built-in option for displaying an OpenStreetMap[4] map as an element of the user interface which has proven to be very convenient for the purposes of authors' application.
+<h3>User manual for UI elements</h3>
+The breakdown of UI elements in module 1 is as it is demonstrated below:
+<br> <br>
+<picture>
+<img src="https://raw.githubusercontent.com/laryxx/RoadTrafficSimulation/master/Readme_images/module1UIBreakdown.png"/>
+</picture>
+<br><br> <br> <br>
+The breakdown of UI elements in module 3 is as it is demonstrated below:
+<br> <br>
+<picture>
+<img src="https://raw.githubusercontent.com/laryxx/RoadTrafficSimulation/master/Readme_images/module3UIBreakdown.png"/>
+</picture>
+<br><br>
 ----
 
 <h3>External elements</h3>
-* __kivy__
-* __osmtogeojson__
-* __OpenStreetMaps__
+* ### [Kivy Framework](https://kivy.org/)
+Kivy is an open-source Python library for developing multitouch applications. We have used Kivy to build the user interface of this program. To learn more about Kivy and to support the project, please visit their [official website](https://kivy.org/).
+* ### [osmtogeojson](https://github.com/tyrasd/osmtogeojson)
+osmtogeojson is a Javascript module for converting OSM data (OSM XML or Overpass JSON) to GeoJSON. It works in the browser, nodejs and can also be used as a command line tool. Learn more by visiting the [website](https://tyrasd.github.io/osmtogeojson/) or the [GitHub page](https://github.com/tyrasd/osmtogeojso).
+* ### [OpenStreetMap](https://www.openstreetmap.org/)
+OSM is an open-source mapping platform that provides detailed and freely accessible geographic information. To learn more about OpenStreetMap and contribute to their community, please visit their [official website](https://www.openstreetmap.org/).
 
 ----
 
-<h3>Implementation approach</h3>
-* __Selected languages, frameworks and data sources__
-* __Use-cases__
-* __Major algorithms description__
-  * __Path finding__
-  * __Car driving__
-  * __File management__
-  * __Map data transformation__
-* __Internal data structures__
-* __Commonly used formats__
 
-----
+<h2>Author's note</h2>
+<h3>On future development</h3>
+GUI Enhancement: The graphical user interface (GUI) could be improved both aesthetically and functionally. This includes offering more options for car generation, frame rate control, and potentially automating map selection.
 
-<h3>Author's note</h3>
-* __On future development__
-* __Fair use__
-* __Recommendations__
+Enhanced Car Routing: Continuous improvements to the car routing algorithm and the internal map representation algorithm are crucial to reducing program crashes, given the vast range of possible test maps.
+
+Realism in Vehicle Movement: A priority for program expansion is enhancing the realism of vehicle movement. This could involve factors like vehicle weight affecting acceleration, different speed zones, importing traffic rules from maps, and more, to create a more realistic simulation.
+
+These enhancements can contribute to the application's functionality and usability.
+
+Aside from third-party components, the author's solution is original and the present license provides the opportunity to fairly use and enhance the program further.
+
+
 
 
