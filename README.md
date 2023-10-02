@@ -137,9 +137,10 @@ The breakdown of UI elements in module 3 is as it is demonstrated below:
 <img src="https://raw.githubusercontent.com/laryxx/RoadTrafficSimulation/master/Readme_images/module3UIBreakdown.png"/>
 </picture>
 <br><br>
+
 ----
 
-<h3>External elements</h3>
+<h2>External elements</h2>
 [Kivy Framework](https://kivy.org/) 
 <br>
 Kivy is an open-source Python library for developing multitouch applications. We have used Kivy to build the user interface of this program. To learn more about Kivy and to support the project, please visit their [official website](https://kivy.org/). 
