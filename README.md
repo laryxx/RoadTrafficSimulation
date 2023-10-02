@@ -65,13 +65,13 @@
 
 <h2>User manual</h2>
 <h3>Requirements</h3>
-1) Running a Windows operating system
-2) Being connected to the internet
-3) Having Python 3 installed and set as environment variable
-4) Having Java Runtime Environment installed
-5) Having a copy of the project locally on your device
-6) Having a python virtual environment installed
-7) Having [osmtogeojson](https://github.com/tyrasd/osmtogeojson) installed and set as environment variable
+1) Running a Windows operating system; <br>
+2) Being connected to the internet; <br>
+3) Having Python 3 installed and set as environment variable; <br>
+4) Having Java Runtime Environment installed; <br>
+5) Having a copy of the project locally on your device; <br>
+6) Having a python virtual environment installed; <br>
+7) [Having osmtogeojson](https://github.com/tyrasd/osmtogeojson) installed and set as environment variable;
 8) Installing the following python packages:
 <br>
 (Versions are as used by the author)
@@ -107,7 +107,7 @@ Alternatively, either of the modules can be ran using the command prompt.
 <h3>Functionality</h3>
 The author's UI requirements were simplicity and functionality. This application has a two-module GUI: one defines simulation properties, and the other displays results. Module 1 features controls for defining generation rules on the left and simulation property settings above. The 'Start' button initiates the second module. The map is interactive, with clickable start and finish markers.
 <h3>Implementation</h3>
-All the existing Graphical user interface is done using kivy framework with python. It was chosen by the author because it fit the program’s needs better than some other popular libraries for creating any sort of user interface applications in python. It also has a built-in option for displaying an OpenStreetMap[4] map as an element of the user interface which has proven to be very convenient for the purposes of authors' application.
+All the existing Graphical user interface is done using kivy framework with python. It was chosen by the author because it fit the program’s needs better than some other popular libraries for creating any sort of user interface applications in python. It also has a built-in option for displaying an OpenStreetMap map as an element of the user interface which has proven to be very convenient for the purposes of authors' application.
 <h3>User manual for UI elements</h3>
 The breakdown of UI elements in module 1 is as it is demonstrated below:
 <br> <br>
