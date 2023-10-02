@@ -71,8 +71,8 @@
 4) Having Java Runtime Environment installed; <br>
 5) Having a copy of the project locally on your device; <br>
 6) Having a python virtual environment installed; <br>
-7) [Having osmtogeojson](https://github.com/tyrasd/osmtogeojson) installed and set as environment variable;
-8) Installing the following python packages:
+7) [Having osmtogeojson](https://github.com/tyrasd/osmtogeojson) installed and set as environment variable; <br>
+8) Installing the following python packages: 
 <br>
 (Versions are as used by the author)
 <br>
@@ -100,6 +100,22 @@ python virtual environment and installing the needed packages
 all that is left to do run the batch file "ExecuteApplication.bat" - the
 application would then launch, executing each module one after another individually.
 Alternatively, either of the modules can be ran using the command prompt.
+
+<h3>Demonstration - part 1</h3>
+This video shows the functioning of module 1:
+
+<video controls>
+  <source src="https://raw.githubusercontent.com/laryxx/RoadTrafficSimulation/master/Readme_images/part1.mp4" type="video/mp4">
+  Your browser does not support the video tag.
+</video>
+
+<h3>Demonstration - part 2</h3>
+This video shows the functioning of module 2:
+
+<video controls>
+  <source src="https://raw.githubusercontent.com/laryxx/RoadTrafficSimulation/master/Readme_images/part2.mp4" type="video/mp4">
+  Your browser does not support the video tag.
+</video>
 
 ----
 
